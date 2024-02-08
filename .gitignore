@@ -19,3 +19,6 @@
 
 # Go workspace file
 go.work
+scan-config.json
+scan-results.json
+repo-results.json

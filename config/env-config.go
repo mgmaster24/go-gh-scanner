@@ -3,24 +3,34 @@ package config
 import (
 	"errors"
 	"os"
+	"strings"
 )
 
-func GetConfigValues() (map[string]string, error) {
-	configVals := make(map[string]string)
+type EnvCongifReader struct{}
 
+func (configReader *EnvCongifReader) GetConfigValues() (*AppConfig, error) {
+	appConfig := &AppConfig{}
 	val := os.Getenv("ORG")
 	if val == "" {
-		return nil, errors.New("Couldn't retrieve envoriment variable!")
+		return nil, errors.New("couldn't retrieve envoriment variable")
 	}
 
-	configVals["ORG"] = val
+	appConfig.Organization = val
 
 	val = os.Getenv("TOKEN")
 	if val == "" {
-		return nil, errors.New("Couldn't retrieve envoriment variable!")
+		return nil, errors.New("couldn't retrieve envoriment variable")
 	}
+	appConfig.GHAuthToken = val
+	appConfig.Languages = splitVar("Languages")
+	appConfig.Dependencies = splitVar("Dependencieds")
+	appConfig.SearchStrings = splitVar("SearchStrings")
 
-	configVals["TOKEN"] = val
+	return appConfig, nil
+}
 
-	return configVals, nil
+func splitVar(strVar string) []string {
+	val := os.Getenv("SearchStrings")
+	ss := strings.Split(val, " ")
+	return ss
 }
