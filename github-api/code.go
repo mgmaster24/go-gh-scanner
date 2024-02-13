@@ -10,9 +10,7 @@ import (
 )
 
 func (ghClient *GHClient) ScanPackageDeps(config *config.AppConfig) ([]api_results.RepoScanResult, error) {
-	options := &github.ListOptions{
-		PerPage: config.PerPage,
-	}
+	options := config.ToListOptions()
 	results := make([]api_results.RepoScanResult, 0)
 
 	for _, dep := range config.Dependencies {
@@ -61,4 +59,34 @@ func (ghClient *GHClient) SearchPackageFilesForDeps(config *config.AppConfig, op
 	}
 
 	return results, resp, nil
+}
+
+func (ghClient *GHClient) CodeSearch(repo api_results.GHRepo, tokens []string, config *config.AppConfig) (*api_results.CodeScanResults, *github.Response, error) {
+	tokenRefs := make([]*api_results.TokenReference, 0)
+	resp := &github.Response{}
+	for _, token := range tokens {
+		query := fmt.Sprintf("%s in:file org:%s repo:%s", token, config.Organization, repo.Name)
+		fmt.Println("Executing query:", query)
+		csrs, resp, err := ghClient.Client.Search.Code(ghClient.Ctx, query, &github.SearchOptions{
+			TextMatch:   true,
+			ListOptions: *config.ToListOptions(),
+		})
+
+		if err != nil {
+			if WaitForRateLimit(err, resp) {
+				continue
+			}
+
+			return nil, resp, err
+		}
+
+		tokenRefs = append(tokenRefs, api_results.ToTokenRefs(csrs, token)...)
+	}
+
+	return &api_results.CodeScanResults{
+		NumMatches: len(tokenRefs),
+		RepoName:   repo.Name,
+		RepoURL:    repo.Url,
+		Tokens:     tokenRefs,
+	}, resp, nil
 }

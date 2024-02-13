@@ -6,28 +6,23 @@ import (
 	"os"
 )
 
-type JSONConfigReader struct {
-	ScanConfigFile string
-}
-
-func (jsonReader *JSONConfigReader) GetConfigValues() (*AppConfig, error) {
-	configFile, err := os.Open(jsonReader.ScanConfigFile)
+func (appConfig *AppConfig) GetConfig() error {
+	configFile, err := os.Open(appConfig.Location)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	defer configFile.Close()
 
 	bytes, err := io.ReadAll(configFile)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	appConfig := &AppConfig{}
 	err = json.Unmarshal(bytes, appConfig)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return appConfig, nil
+	return nil
 }

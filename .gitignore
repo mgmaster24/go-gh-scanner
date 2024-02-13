@@ -22,3 +22,7 @@ go.work
 scan-config.json
 scan-results.json
 repo-results.json
+app-config.json
+tokens.json
+code-scan-results.json
+ng-tokens.json

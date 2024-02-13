@@ -7,9 +7,7 @@ import (
 )
 
 func (ghClient *GHClient) GetReposForOrg(config *config.AppConfig) ([]api_results.GHRepo, error) {
-	options := &github.ListOptions{
-		PerPage: config.PerPage,
-	}
+	options := config.ToListOptions()
 
 	orgRepos, err := GetPagedResults[api_results.GHRepo](config, options, ghClient.GetOrgRepoList)
 	return orgRepos, err
