@@ -6,9 +6,7 @@ import (
 	"strings"
 )
 
-type EnvCongifReader struct{}
-
-func (configReader *EnvCongifReader) GetConfigValues() (*AppConfig, error) {
+func GetConfigValues() (*AppConfig, error) {
 	appConfig := &AppConfig{}
 	val := os.Getenv("ORG")
 	if val == "" {
@@ -24,13 +22,12 @@ func (configReader *EnvCongifReader) GetConfigValues() (*AppConfig, error) {
 	appConfig.GHAuthToken = val
 	appConfig.Languages = splitVar("Languages")
 	appConfig.Dependencies = splitVar("Dependencieds")
-	appConfig.SearchStrings = splitVar("SearchStrings")
 
 	return appConfig, nil
 }
 
 func splitVar(strVar string) []string {
-	val := os.Getenv("SearchStrings")
+	val := os.Getenv(strVar)
 	ss := strings.Split(val, " ")
 	return ss
 }

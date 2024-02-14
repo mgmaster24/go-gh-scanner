@@ -26,3 +26,4 @@ app-config.json
 tokens.json
 code-scan-results.json
 ng-tokens.json
+go-gh-scanner

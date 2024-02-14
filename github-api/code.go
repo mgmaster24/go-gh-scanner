@@ -15,7 +15,7 @@ func (ghClient *GHClient) ScanPackageDeps(config *config.AppConfig) ([]api_resul
 
 	for _, dep := range config.Dependencies {
 		config.CurrentDep = dep
-		fmt.Println("Scanning for repos using", dep)
+		fmt.Println("Scanning for repos using dependency", dep)
 		scanResults, err := GetPagedResults[api_results.RepoScanResult](config, options, ghClient.SearchPackageFilesForDeps)
 		if err != nil {
 			return nil, err

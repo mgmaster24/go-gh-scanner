@@ -1,0 +1,7 @@
+[
+  { "selector": "lib-comp-1", "className": "LibComponent1", "moduleName": "LibComponentModule" },
+  { "selector": "lib-comp-2", "className": "LibComponent2", "moduleName": "LibComponentModule" },
+  { "selector": "NONE", "className": "LibService", "moduleName": "NONE" },
+  { "selector": "lib-comp-3", "className": "LibComponent3", "moduleName": "LibComponent3Module" },
+  { "selector": "NONE", "className": "LibAlertService", "moduleName": "LibAlertModule" }
+]

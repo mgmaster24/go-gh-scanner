@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func ReadConfig[T any](fileName string) (T, error) {
+func ReadJSONData[T any](fileName string) (T, error) {
 	var val T
 	configFile, err := os.Open(fileName)
 	if err != nil {

@@ -1,28 +1,16 @@
 package config
 
 import (
-	"encoding/json"
-	"io"
-	"os"
+	"github.com/mgmaster24/go-gh-scanner/reader"
 )
 
-func (appConfig *AppConfig) GetConfig() error {
-	configFile, err := os.Open(appConfig.Location)
+func (appConfig *AppConfig) Read(fileName string) error {
+	config, err := reader.ReadJSONData[AppConfig](fileName)
 	if err != nil {
 		return err
 	}
 
-	defer configFile.Close()
-
-	bytes, err := io.ReadAll(configFile)
-	if err != nil {
-		return err
-	}
-
-	err = json.Unmarshal(bytes, appConfig)
-	if err != nil {
-		return err
-	}
+	*appConfig = config
 
 	return nil
 }

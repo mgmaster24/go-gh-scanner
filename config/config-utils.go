@@ -6,6 +6,10 @@ import (
 	"github.com/google/go-github/github"
 )
 
+func ReadConfig(fileName string, configVar Config) error {
+	return configVar.Read(fileName)
+}
+
 func (config *AppConfig) GetLanguagesMap() map[string]struct{} {
 	languages := make(map[string]struct{})
 	for _, v := range config.Languages {

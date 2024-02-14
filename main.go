@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/mgmaster24/go-gh-scanner/config"
 	ghapi "github.com/mgmaster24/go-gh-scanner/github-api"
@@ -11,8 +12,8 @@ import (
 )
 
 func main() {
-	appConfig := &config.AppConfig{Location: "app-config.json"}
-	err := appConfig.GetConfig()
+	appConfig := &config.AppConfig{}
+	err := appConfig.Read("app-config.json")
 	if err != nil {
 		panic(err)
 	}
@@ -51,13 +52,19 @@ func main() {
 
 	tokens := tokenRetriever.ToTokens()
 	codeScanResults := make([]*api_results.CodeScanResults, 0)
+	numRepos := len(repoResults)
+	fmt.Println("Starting code scan for tokens. Current Time:", time.Now(), "Total Repos:", numRepos)
 	for _, repo := range repoResults {
+		fmt.Println("Scanning for tokens in repo", repo.Repo.Name)
 		codeScanResult, _, err := client.CodeSearch(*repo.Repo, tokens, appConfig)
 		if err != nil {
 			break
 		}
 
 		codeScanResults = append(codeScanResults, codeScanResult)
+		fmt.Println("Finshed scanning", repo.Repo.Name)
+		numRepos = numRepos - 1
+		fmt.Println(numRepos, "to go!")
 	}
 
 	writer.SaveCodeScanResults("code-scan-results.json", codeScanResults)

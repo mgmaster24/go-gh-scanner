@@ -2,6 +2,7 @@ package tokens
 
 import (
 	"github.com/mgmaster24/go-gh-scanner/reader"
+	"github.com/mgmaster24/go-gh-scanner/utils"
 )
 
 type JSONTokenRetriever struct {
@@ -10,11 +11,15 @@ type JSONTokenRetriever struct {
 
 func (jsonRetriever *JSONTokenRetriever) Fetch(fileName string) error {
 	jsonRetriever.Tokens = make([]string, 0)
-	var err error
-	jsonRetriever.Tokens, err = reader.ReadConfig[[]string](fileName)
-	return err
+	tokens, err := reader.ReadJSONData[[]string](fileName)
+	if err != nil {
+		return err
+	}
+
+	jsonRetriever.Tokens = append(jsonRetriever.Tokens, tokens...)
+	return nil
 }
 
 func (jsonRetriever *JSONTokenRetriever) ToTokens() []string {
-	return RemoveDuplicates(jsonRetriever.Tokens)
+	return utils.RemoveDuplicates(jsonRetriever.Tokens)
 }

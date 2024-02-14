@@ -11,21 +11,25 @@ type NgComponent struct {
 }
 
 type NgComponentReader struct {
-	components []NgComponent
+	Components []NgComponent
 }
 
 func (ngCompReader *NgComponentReader) Fetch(fileName string) error {
-	ngCompReader.components = []NgComponent{}
-	components, err := reader.ReadConfig[[]NgComponent](fileName)
-	ngCompReader.components = append(ngCompReader.components, components...)
-	return err
+	ngCompReader.Components = []NgComponent{}
+	components, err := reader.ReadJSONData[[]NgComponent](fileName)
+	if err != nil {
+		return err
+	}
+
+	ngCompReader.Components = append(ngCompReader.Components, components...)
+	return nil
 }
 
 func (ngCompReader *NgComponentReader) ToTokens() []string {
 	inMap := make(map[string]bool)
 	results := []string{}
 
-	for _, v := range ngCompReader.components {
+	for _, v := range ngCompReader.Components {
 		token := v.Selector
 		if token == "NONE" {
 			token = v.ClassName

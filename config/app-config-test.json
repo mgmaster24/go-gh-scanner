@@ -1,0 +1,22 @@
+{
+  "ghToken": "secret-gh-token",
+  "organization": "MyOrganization",
+  "perPage": 100,
+  "languages": [
+    "TypeScript",
+    "JavaScript"
+  ],
+  "packageFile": "package.json",
+  "dependencies": [
+    "@some/npm-dep"
+  ],
+  "reposToignore":[
+    "ignore-this-repo"
+  ],
+  "teamsToIgnore":[
+    "software-team",
+    "pd-team",
+    "qa-team",
+    "security-team"
+  ]
+}
