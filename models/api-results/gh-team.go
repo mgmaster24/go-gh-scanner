@@ -11,6 +11,7 @@ type TeamsResponse struct {
 	Teams []github.Team
 }
 
+// Implementing IO Writer in order to fill out TeamsResponse
 func (resp *TeamsResponse) Write(data []byte) (n int, err error) {
 	teams := make([]github.Team, 0)
 	err = json.Unmarshal(data, &teams)

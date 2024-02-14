@@ -8,7 +8,6 @@ import (
 	ghapi "github.com/mgmaster24/go-gh-scanner/github-api"
 	api_results "github.com/mgmaster24/go-gh-scanner/models/api-results"
 	"github.com/mgmaster24/go-gh-scanner/tokens"
-	"github.com/mgmaster24/go-gh-scanner/writer"
 )
 
 func main() {
@@ -38,7 +37,8 @@ func main() {
 	}
 
 	fmt.Println("Saving repository results")
-	err = writer.SaveRepoResults("repo-results.json", &api_results.GHRepoResults{Repos: repoResults, Count: len(repoResults)})
+	ghRepoResults := &api_results.GHRepoResults{Repos: repoResults, Count: len(repoResults)}
+	err = ghRepoResults.SaveRepoResults("repo-results.json")
 	if err != nil {
 		panic(err)
 	}
@@ -67,5 +67,5 @@ func main() {
 		fmt.Println(numRepos, "to go!")
 	}
 
-	writer.SaveCodeScanResults("code-scan-results.json", codeScanResults)
+	api_results.SaveCodeScanResults("code-scan-results.json", codeScanResults)
 }

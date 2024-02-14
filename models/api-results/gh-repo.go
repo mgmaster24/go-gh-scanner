@@ -1,6 +1,10 @@
 package api_results
 
-import "time"
+import (
+	"time"
+
+	"github.com/mgmaster24/go-gh-scanner/writer"
+)
 
 type GHRepo struct {
 	Name         string    `json:"repoName"`
@@ -20,4 +24,8 @@ type GHRepoUsingDependencies struct {
 type GHRepoResults struct {
 	Repos []GHRepoUsingDependencies `json:"repos"`
 	Count int                       `json:"count"`
+}
+
+func (ghRepoResults *GHRepoResults) SaveRepoResults(fileName string) error {
+	return writer.MarshallAndSave(fileName, ghRepoResults)
 }
