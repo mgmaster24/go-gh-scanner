@@ -10,6 +10,7 @@ type ScanResults struct {
 type RepoScanResult struct {
 	RepoName          string `json:"repoName"`
 	DependencyVersion string `json:"dependencyVersion"`
+	Directory         string `json:"directory"`
 }
 
 type CodeScanResults struct {

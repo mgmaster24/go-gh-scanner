@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/mgmaster24/go-gh-scanner/config"
-	ghapi "github.com/mgmaster24/go-gh-scanner/github-api"
-	api_results "github.com/mgmaster24/go-gh-scanner/models/api-results"
+	"github.com/mgmaster24/go-gh-scanner/github_api"
+	"github.com/mgmaster24/go-gh-scanner/models/api_results"
+	"github.com/mgmaster24/go-gh-scanner/search"
 	"github.com/mgmaster24/go-gh-scanner/tokens"
+	"github.com/mgmaster24/go-gh-scanner/utils"
+	"github.com/mgmaster24/go-gh-scanner/writer"
 )
 
 func main() {
@@ -17,7 +19,7 @@ func main() {
 		panic(err)
 	}
 
-	client := ghapi.NewClient(appConfig.GHAuthToken)
+	client := github_api.NewClient(appConfig.AuthToken)
 
 	// Run scan to get results
 	scanResults, err := client.ScanPackageDeps(appConfig)
@@ -25,20 +27,25 @@ func main() {
 		panic(err)
 	}
 
-	repoResults := make([]api_results.GHRepoUsingDependencies, 0)
+	fmt.Println("Getting repository data for repos found during dependency scan.")
+	repoResults := make([]api_results.GHRepo, 0)
 	for _, sr := range scanResults {
 		repoData, err := client.GetRepoData(sr, appConfig)
 		if err != nil {
 			fmt.Println(err)
 			break
 		}
-
 		repoResults = append(repoResults, *repoData)
 	}
 
 	fmt.Println("Saving repository results")
 	ghRepoResults := &api_results.GHRepoResults{Repos: repoResults, Count: len(repoResults)}
-	err = ghRepoResults.SaveRepoResults("repo-results.json")
+	err = ghRepoResults.SaveRepoResultsToFile("repo-results.json")
+	if err != nil {
+		panic(err)
+	}
+
+	err = utils.CreateDir(appConfig.ExtractDir)
 	if err != nil {
 		panic(err)
 	}
@@ -50,22 +57,62 @@ func main() {
 		panic(err)
 	}
 
-	tokens := tokenRetriever.ToTokens()
-	codeScanResults := make([]*api_results.CodeScanResults, 0)
-	numRepos := len(repoResults)
-	fmt.Println("Starting code scan for tokens. Current Time:", time.Now(), "Total Repos:", numRepos)
-	for _, repo := range repoResults {
-		fmt.Println("Scanning for tokens in repo", repo.Repo.Name)
-		codeScanResult, _, err := client.CodeSearch(*repo.Repo, tokens, appConfig)
+	for _, repo := range ghRepoResults.Repos {
+		fmt.Println("Attempting to get repo archive for repo", repo.Name)
+		archiveFile, err := repo.GetRepoArchive(appConfig.AuthToken, api_results.Tarball, appConfig.ExtractDir)
 		if err != nil {
-			break
+			panic(fmt.Sprintf("Error getting repository archive %s", err))
 		}
 
-		codeScanResults = append(codeScanResults, codeScanResult)
-		fmt.Println("Finshed scanning", repo.Repo.Name)
-		numRepos = numRepos - 1
-		fmt.Println(numRepos, "to go!")
+		// extract gzip
+		directory, err := utils.ExtractGZIP(archiveFile, appConfig.ExtractDir)
+		if err != nil {
+			panic(err)
+		}
+
+		// get files for language extensions
+		langFiles, err := utils.GetFilesByExtension(directory, appConfig.GetLanguageExts())
+		if err != nil {
+			panic(err)
+		}
+
+		// search language specific files
+		tokenRefs, err := search.FindTokenRefsInFiles(langFiles, tokenRetriever.ToTokens())
+		if err != nil {
+			panic(err)
+		}
+
+		// create directory for repo results
+		dir := "results/" + repo.Name
+		err = utils.CreateDir(dir)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Println("Saving token search results for repo", repo.Name)
+		count := 0
+		for _, v := range tokenRefs {
+			resultFile := fmt.Sprintf("%s/results_%v.json", dir, count)
+			err = writer.MarshallAndSave(resultFile, v)
+			if err != nil {
+				panic(err)
+			}
+
+			count++
+		}
+
+		err = utils.RemoveDir(directory)
+		if err != nil {
+			panic(err)
+		}
+
+		err = utils.RemoveFile(archiveFile)
+		if err != nil {
+			panic(err)
+		}
 	}
 
-	api_results.SaveCodeScanResults("code-scan-results.json", codeScanResults)
+	// TODO
+	// Seperate module, component, class results
+	// Save results to Dynamo
 }

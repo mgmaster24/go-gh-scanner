@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestRuntAll(t *testing.T) {
+func TestTokenReader(t *testing.T) {
 	var tokenRetriever TokenReader = &NgComponentReader{}
 	err := tokenRetriever.Fetch("ng-tokens-test.json")
 	if err != nil {

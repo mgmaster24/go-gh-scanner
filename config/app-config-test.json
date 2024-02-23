@@ -1,10 +1,21 @@
 {
   "ghToken": "secret-gh-token",
-  "organization": "MyOrganization",
+  "owner": "MyOrganization",
+  "extractDir": "temp",
   "perPage": 100,
   "languages": [
-    "TypeScript",
-    "JavaScript"
+    {
+      "name": "TypeScript",
+      "extension": ".ts"
+    },
+    {
+      "name": "JavaScript",
+      "extension": ".js"
+    },
+    {
+      "name": "HTML",
+      "extension": ".html"
+    }
   ],
   "packageFile": "package.json",
   "dependencies": [

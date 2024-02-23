@@ -29,11 +29,11 @@ func verifySettings(appConfig *AppConfig, t *testing.T) {
 		t.Fatal("Failed to read per page")
 	}
 
-	if appConfig.GHAuthToken != "secret-gh-token" {
+	if appConfig.AuthToken != "secret-gh-token" {
 		t.Fatal("Failed to read auth token")
 	}
 
-	if appConfig.Organization != "MyOrganization" {
+	if appConfig.Owner != "MyOrganization" {
 		t.Fatal("Failed to read organization")
 	}
 
@@ -41,10 +41,19 @@ func verifySettings(appConfig *AppConfig, t *testing.T) {
 		t.Fatal("Failed to read languages")
 	}
 
+	if len(appConfig.Languages) != 3 {
+		t.Fatal("Wrong number of languages")
+	}
+
 	for _, lang := range appConfig.Languages {
-		if lang != "TypeScript" && lang != "JavaScript" {
+		if lang.Name != "TypeScript" && lang.Name != "JavaScript" && lang.Name != "HTML" {
 			t.Fatal("Failed to read languages")
 		}
+	}
+
+	exts := appConfig.GetLanguageExts()
+	if len(exts) != 3 {
+		t.Fatal("Failed to get the correct number of extensions")
 	}
 
 	if appConfig.PackageFile != "package.json" {
@@ -86,5 +95,27 @@ func verifySettings(appConfig *AppConfig, t *testing.T) {
 
 	if appConfig.TeamsToIgnore[3] != "security-team" {
 		t.Fatal("Incorrect team read. Expected security-team")
+	}
+}
+
+func TestShouldContainRepo(t *testing.T) {
+	reposToIgnore := []string{"test-repo", "test2-repo", "*-this-is-a-wildcard", "test-*-wildcard"}
+	appConfig := AppConfig{}
+	appConfig.ReposToIgnore = reposToIgnore
+
+	if !appConfig.ShouldIgnoreRepo("test-repo") {
+		t.Fatal("Failed to ignore expected repo")
+	}
+
+	if !appConfig.ShouldIgnoreRepo("test2-repo") {
+		t.Fatal("Failed to ignore expected repo")
+	}
+
+	if !appConfig.ShouldIgnoreRepo("should-ignore-this-is-a-wildcard") {
+		t.Fatal("Failed to ignore expected repo")
+	}
+
+	if !appConfig.ShouldIgnoreRepo("test-this-is-a-wildcard") {
+		t.Fatal("Failed to ignore expected repo")
 	}
 }

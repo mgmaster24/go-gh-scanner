@@ -19,6 +19,8 @@
 
 # Go workspace file
 go.work
+
+# config files
 scan-config.json
 scan-results.json
 repo-results.json
@@ -26,4 +28,12 @@ app-config.json
 tokens.json
 code-scan-results.json
 ng-tokens.json
+
+# binary
 go-gh-scanner
+
+# extraction dir
+temp
+
+# results
+results

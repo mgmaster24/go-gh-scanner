@@ -1,4 +1,4 @@
-package ghapi
+package github_api
 
 import (
 	"fmt"

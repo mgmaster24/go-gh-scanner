@@ -4,19 +4,30 @@ import (
 	"strings"
 
 	"github.com/google/go-github/github"
+	"github.com/mgmaster24/go-gh-scanner/utils"
 )
 
 func ReadConfig(fileName string, configVar Config) error {
 	return configVar.Read(fileName)
 }
 
-func (config *AppConfig) GetLanguagesMap() map[string]struct{} {
-	languages := make(map[string]struct{})
-	for _, v := range config.Languages {
-		languages[v] = struct{}{}
+func (config *AppConfig) GetLanguage(lang string) *Language {
+	for _, l := range config.Languages {
+		if l.Name == lang {
+			return &l
+		}
 	}
 
-	return languages
+	return nil
+}
+
+func (config *AppConfig) GetLanguageExts() []string {
+	exts := make([]string, len(config.Languages))
+	for i, l := range config.Languages {
+		exts[i] = l.Extension
+	}
+
+	return exts
 }
 
 func (config *AppConfig) ToListOptions() *github.ListOptions {
@@ -39,7 +50,11 @@ func (config *AppConfig) ShouldIgnoreTeam(teamName string) bool {
 
 func isInStrArray(vals []string, strToCheck string) bool {
 	for _, val := range vals {
-		if val == strToCheck {
+		if strings.Contains(val, "*") {
+			if utils.StringsMatch(val, strToCheck) {
+				return true
+			}
+		} else if val == strToCheck {
 			return true
 		}
 	}

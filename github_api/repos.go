@@ -1,9 +1,9 @@
-package ghapi
+package github_api
 
 import (
 	"github.com/google/go-github/github"
 	"github.com/mgmaster24/go-gh-scanner/config"
-	api_results "github.com/mgmaster24/go-gh-scanner/models/api-results"
+	"github.com/mgmaster24/go-gh-scanner/models/api_results"
 )
 
 func (ghClient *GHClient) GetReposForOrg(config *config.AppConfig) ([]api_results.GHRepo, error) {
@@ -17,7 +17,7 @@ func (ghClient *GHClient) GetOrgRepoList(config *config.AppConfig, options *gith
 	var orgRepos []api_results.GHRepo
 	repos, resp, err := ghClient.Client.Repositories.ListByOrg(
 		ghClient.Ctx,
-		config.Organization,
+		config.Owner,
 		&github.RepositoryListByOrgOptions{ListOptions: *options})
 	if err != nil {
 		return nil, resp, err
@@ -28,28 +28,19 @@ func (ghClient *GHClient) GetOrgRepoList(config *config.AppConfig, options *gith
 			description = *repo.Description
 		}
 
-		language := ""
-		if repo.Language != nil {
-			language = *repo.Language
-		}
-
-		_, ok := config.GetLanguagesMap()[language]
-		if ok {
-			orgRepos = append(orgRepos, api_results.GHRepo{
-				Name:        *repo.Name,
-				Description: description,
-				Url:         *repo.HTMLURL,
-				Language:    language,
-				Owner:       *repo.Owner.Login,
-			})
-		}
+		orgRepos = append(orgRepos, api_results.GHRepo{
+			Name:        *repo.Name,
+			Description: description,
+			Url:         *repo.HTMLURL,
+			Owner:       *repo.Owner.Login,
+		})
 	}
 
 	return orgRepos, resp, nil
 }
 
-func (ghClient *GHClient) GetRepoData(repoScanResults api_results.RepoScanResult, config *config.AppConfig) (*api_results.GHRepoUsingDependencies, error) {
-	repo, _, err := ghClient.Client.Repositories.Get(ghClient.Ctx, config.Organization, repoScanResults.RepoName)
+func (ghClient *GHClient) GetRepoData(repoScanResults api_results.RepoScanResult, config *config.AppConfig) (*api_results.GHRepo, error) {
+	repo, _, err := ghClient.Client.Repositories.Get(ghClient.Ctx, config.Owner, repoScanResults.RepoName)
 	if err != nil {
 		return nil, err
 	}
@@ -64,21 +55,21 @@ func (ghClient *GHClient) GetRepoData(repoScanResults api_results.RepoScanResult
 		description = *repo.Description
 	}
 
-	language := ""
-	if repo.Language != nil {
-		language = *repo.Language
+	languages, err := ghClient.GetLanguages(*repo.LanguagesURL)
+	if err != nil {
+		return nil, err
 	}
 
-	ghRepo := &api_results.GHRepoUsingDependencies{
-		Repo: &api_results.GHRepo{
-			Name:         *repo.Name,
-			Description:  description,
-			Language:     language,
-			Owner:        *repo.Owner.Login,
-			Url:          *repo.HTMLURL,
-			LastModified: repo.GetPushedAt().Time,
-			Team:         teams,
-		},
+	ghRepo := &api_results.GHRepo{
+		Name:               *repo.Name,
+		Description:        description,
+		Owner:              *repo.Owner.Login,
+		Url:                *repo.HTMLURL,
+		Languages:          languages,
+		LastModified:       repo.GetPushedAt().Time,
+		Team:               teams,
+		APIUrl:             *repo.URL,
+		DefaultBranch:      *repo.DefaultBranch,
 		DependencyVersions: repoScanResults.DependencyVersion,
 	}
 
