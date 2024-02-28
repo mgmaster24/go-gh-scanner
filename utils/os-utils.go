@@ -1,3 +1,6 @@
+// os-utils.go - Provide operating system IO related utility methods
+//
+// I.E.) opening files, creating directories, remove files/directories, getting file info.
 package utils
 
 import (

@@ -4,17 +4,22 @@ import (
 	"github.com/mgmaster24/go-gh-scanner/reader"
 )
 
+// Struct that defines common Angular object types.
 type NgComponent struct {
 	Selector   string `json:"selector"`
 	ClassName  string `json:"className"`
 	ModuleName string `json:"moduleName"`
 }
 
-type NgComponentReader struct {
+// Struct that holds Angular tokens.
+//
+// Implements the TokenReader interface.
+type NgTokenReader struct {
 	Components []NgComponent
 }
 
-func (ngCompReader *NgComponentReader) Fetch(fileName string) error {
+// Retrieves a slice of NgComponent from a JSON file.
+func (ngCompReader *NgTokenReader) Fetch(fileName string) error {
 	ngCompReader.Components = []NgComponent{}
 	components, err := reader.ReadJSONData[[]NgComponent](fileName)
 	if err != nil {
@@ -25,7 +30,9 @@ func (ngCompReader *NgComponentReader) Fetch(fileName string) error {
 	return nil
 }
 
-func (ngCompReader *NgComponentReader) ToTokens() []string {
+// Turns the slice of NgComponents contained by the reader and turns them
+// to a slice of strings
+func (ngCompReader *NgTokenReader) ToTokens() []string {
 	inMap := make(map[string]bool)
 	results := []string{}
 

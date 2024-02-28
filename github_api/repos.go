@@ -6,14 +6,18 @@ import (
 	"github.com/mgmaster24/go-gh-scanner/models/api_results"
 )
 
+// Get the organization's repositories for the provided config values
+//
+// Config values of interest
+// - PerPage
+// - Owner
 func (ghClient *GHClient) GetReposForOrg(config *config.AppConfig) ([]api_results.GHRepo, error) {
 	options := config.ToListOptions()
-
-	orgRepos, err := GetPagedResults[api_results.GHRepo](config, options, ghClient.GetOrgRepoList)
+	orgRepos, err := GetPagedResults[api_results.GHRepo](config, options, ghClient.getOrgRepoList)
 	return orgRepos, err
 }
 
-func (ghClient *GHClient) GetOrgRepoList(config *config.AppConfig, options *github.ListOptions) ([]api_results.GHRepo, *github.Response, error) {
+func (ghClient *GHClient) getOrgRepoList(config *config.AppConfig, options *github.ListOptions) ([]api_results.GHRepo, *github.Response, error) {
 	var orgRepos []api_results.GHRepo
 	repos, resp, err := ghClient.Client.Repositories.ListByOrg(
 		ghClient.Ctx,
@@ -39,6 +43,7 @@ func (ghClient *GHClient) GetOrgRepoList(config *config.AppConfig, options *gith
 	return orgRepos, resp, nil
 }
 
+// Retrieves the repository data for the provided dependency scan results
 func (ghClient *GHClient) GetRepoData(repoScanResults api_results.RepoScanResult, config *config.AppConfig) (*api_results.GHRepo, error) {
 	repo, _, err := ghClient.Client.Repositories.Get(ghClient.Ctx, config.Owner, repoScanResults.RepoName)
 	if err != nil {
@@ -62,6 +67,7 @@ func (ghClient *GHClient) GetRepoData(repoScanResults api_results.RepoScanResult
 
 	ghRepo := &api_results.GHRepo{
 		Name:               *repo.Name,
+		FullName:           *repo.FullName,
 		Description:        description,
 		Owner:              *repo.Owner.Login,
 		Url:                *repo.HTMLURL,

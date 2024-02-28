@@ -1,11 +1,13 @@
 package config
 
 type AppConfig struct {
-	AuthToken  string `json:"authToken"`
-	Owner      string `json:"owner"` // can be user or organization
-	ExtractDir string `json:"extractDir"`
+	AuthToken    string `json:"authToken"`
+	Owner        string `json:"owner"` // can be user or organization
+	ExtractDir   string `json:"extractDir"`
+	WriterConfig `json:"writerConfig"`
 	DependencyScanConfig
 	ScanConfig
+	CloudConfig
 	CurrentDep string
 }
 
@@ -25,6 +27,35 @@ type Language struct {
 	Name      string `json:"name"`
 	Extension string `json:"extension"`
 }
+
+type CloudConfig struct {
+	Region string `json:"region"`
+	DBConfig
+}
+
+type DBConfig struct {
+	TableName string `json:"tableName"`
+}
+
+// Configuration that is used to define a results writer
+type WriterConfig struct {
+	// Out Directory, table name, etc...
+	DestinationType    DestinationType `json:"destinationType"`
+	Destination        string          `json:"destination"`
+	UseBatchProcessing bool            `json:"useBatch"`
+}
+
+// Custom type for defining destinations
+type DestinationType string
+
+// Destination type enumeration
+//
+// Where the results will be written to.
+const (
+	DefaultDestination DestinationType = "none"
+	FileDestination    DestinationType = "file"
+	TableDesitnation   DestinationType = "table"
+)
 
 type Config interface {
 	Read(fileName string) error

@@ -4,13 +4,11 @@ import (
 	"github.com/mgmaster24/go-gh-scanner/reader"
 )
 
-func (appConfig *AppConfig) Read(fileName string) error {
+func Read(fileName string) (*AppConfig, error) {
 	config, err := reader.ReadJSONData[AppConfig](fileName)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	*appConfig = config
-
-	return nil
+	return &config, err
 }

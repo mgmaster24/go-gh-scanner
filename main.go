@@ -9,12 +9,11 @@ import (
 	"github.com/mgmaster24/go-gh-scanner/search"
 	"github.com/mgmaster24/go-gh-scanner/tokens"
 	"github.com/mgmaster24/go-gh-scanner/utils"
-	"github.com/mgmaster24/go-gh-scanner/writer"
+	"github.com/mgmaster24/go-gh-scanner/writer/results"
 )
 
 func main() {
-	appConfig := &config.AppConfig{}
-	err := appConfig.Read("app-config.json")
+	appConfig, err := config.Read("app-config.json")
 	if err != nil {
 		panic(err)
 	}
@@ -28,18 +27,12 @@ func main() {
 	}
 
 	fmt.Println("Getting repository data for repos found during dependency scan.")
-	repoResults := make([]api_results.GHRepo, 0)
-	for _, sr := range scanResults {
-		repoData, err := client.GetRepoData(sr, appConfig)
-		if err != nil {
-			fmt.Println(err)
-			break
-		}
-		repoResults = append(repoResults, *repoData)
+	ghRepoResults, err := scanResults.ToRepoData(appConfig, client.GetRepoData)
+	if err != nil {
+		panic(err)
 	}
 
 	fmt.Println("Saving repository results")
-	ghRepoResults := &api_results.GHRepoResults{Repos: repoResults, Count: len(repoResults)}
 	err = ghRepoResults.SaveRepoResultsToFile("repo-results.json")
 	if err != nil {
 		panic(err)
@@ -51,7 +44,11 @@ func main() {
 	}
 
 	// get tokens - This is just and example of how to read tokens of different types for search
-	var tokenRetriever tokens.TokenReader = &tokens.NgComponentReader{}
+	tokenRetriever, err := tokens.CreateTokenReader(tokens.NGTokenReaderType)
+	if err != nil {
+		panic(err)
+	}
+
 	err = tokenRetriever.Fetch("ng-tokens.json")
 	if err != nil {
 		panic(err)
@@ -77,35 +74,32 @@ func main() {
 		}
 
 		// search language specific files
-		tokenRefs, err := search.FindTokenRefsInFiles(langFiles, tokenRetriever.ToTokens())
-		if err != nil {
-			panic(err)
-		}
-
-		// create directory for repo results
-		dir := "results/" + repo.Name
-		err = utils.CreateDir(dir)
+		tokenRefs, err := search.FindTokenRefsInFiles(langFiles, tokenRetriever.ToTokens(), directory)
 		if err != nil {
 			panic(err)
 		}
 
 		fmt.Println("Saving token search results for repo", repo.Name)
-		count := 0
-		for _, v := range tokenRefs {
-			resultFile := fmt.Sprintf("%s/results_%v.json", dir, count)
-			err = writer.MarshallAndSave(resultFile, v)
-			if err != nil {
-				panic(err)
-			}
-
-			count++
+		tokenResults := tokenRefs.ToTokenResults(repo.FullName, repo.Url, repo.DefaultBranch)
+		// writing results - This is just and example of how to create an object as a
+		// ResultsWriter and write the results where you would like
+		resultsWriter, err := results.CreateResultsWriter(appConfig.WriterConfig)
+		if err != nil {
+			panic(err)
 		}
 
+		err = resultsWriter.Write(tokenResults)
+		if err != nil {
+			panic(err)
+		}
+
+		// Remove extracted directory
 		err = utils.RemoveDir(directory)
 		if err != nil {
 			panic(err)
 		}
 
+		// Remove the archive file
 		err = utils.RemoveFile(archiveFile)
 		if err != nil {
 			panic(err)

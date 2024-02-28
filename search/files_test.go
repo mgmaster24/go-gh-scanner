@@ -1,12 +1,11 @@
 package search
 
 import (
-	"fmt"
 	"testing"
 )
 
 func TestFindOccurences(t *testing.T) {
-	occurences, err := FindTokenOccurences("test.html", "test-comp")
+	occurences, err := findTokenOccurences("test.html", "test-comp", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -16,6 +15,16 @@ func TestFindOccurences(t *testing.T) {
 	}
 
 	for _, o := range *occurences {
-		fmt.Println(o)
+		if o.File != "test.html" {
+			t.Fatal("Incorrect file reference")
+		}
+
+		if o.LineNumber != 2 && o.LineNumber != 6 {
+			t.Fatal("Incorrect line number")
+		}
+
+		if o.Token != "test-comp" {
+			t.Fatal("Incorrect token")
+		}
 	}
 }

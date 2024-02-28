@@ -1,7 +1,9 @@
+// utils.go - Provide generic utility methods.
 package utils
 
 import "strings"
 
+// Remove any duplicate tokens for a slice of tokens
 func RemoveDuplicates(tokens []string) []string {
 	inMap := make(map[string]bool)
 	results := []string{}
@@ -16,6 +18,9 @@ func RemoveDuplicates(tokens []string) []string {
 	return results
 }
 
+// Do the strings match
+//
+// Handles * wildcard strings as well as concrete strings
 func StringsMatch(lhs string, rhs string) bool {
 	lhsLen, rhsLen := len(lhs), len(rhs)
 	if lhsLen == 0 && rhsLen == 0 {
@@ -37,6 +42,7 @@ func StringsMatch(lhs string, rhs string) bool {
 	return false
 }
 
+// Does the provided string exist in the provided slice of strings
 func IsStrInStrArray(vals []string, strToCheck string) bool {
 	for _, val := range vals {
 		if strings.Contains(val, "*") {

@@ -5,8 +5,12 @@ import (
 )
 
 func TestTokenReader(t *testing.T) {
-	var tokenRetriever TokenReader = &NgComponentReader{}
-	err := tokenRetriever.Fetch("ng-tokens-test.json")
+	tokenRetriever, err := CreateTokenReader(NGTokenReaderType)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = tokenRetriever.Fetch("ng-tokens-test.json")
 	if err != nil {
 		t.Fatal(err)
 	}

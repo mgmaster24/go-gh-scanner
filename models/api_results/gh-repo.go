@@ -15,7 +15,8 @@ import (
 )
 
 type GHRepo struct {
-	Name               string       `json:"repoName"`
+	Name               string       `json:"name"`
+	FullName           string       `json:"fullName"`
 	Description        string       `json:"description"`
 	Languages          []GHLanguage `json:"languages"`
 	Owner              string       `json:"owner"`
@@ -24,12 +25,15 @@ type GHRepo struct {
 	DefaultBranch      string       `json:"defaultBranch"`
 	LastModified       time.Time    `json:"lastModified"`
 	DependencyVersions string       `json:"dependencyVersion"`
-	APIUrl             string
+	APIUrl             string       `json:"apiUrl"`
+	HTMLUrl            string       `json:"htppUrl"`
 }
 
+type GHRepos []GHRepo
+
 type GHRepoResults struct {
-	Repos []GHRepo `json:"repos"`
-	Count int      `json:"count"`
+	Repos GHRepos `json:"repos"`
+	Count int     `json:"count"`
 }
 
 type ArchiveFormat string
@@ -51,13 +55,18 @@ func (ghRepoResults *GHRepoResults) SaveRepoResultsToAWS() error {
 }
 
 func (repo *GHRepo) GetRepoArchive(token string, archiveFmt ArchiveFormat, directory string) (string, error) {
+	acceptEncoding := "gzip"
+	if archiveFmt == Zipball {
+		acceptEncoding = "zip"
+	}
+
 	req, err := utils.NewHttpRequestNoBody(
 		http.MethodGet,
 		fmt.Sprintf("%s/%s/%s", repo.APIUrl, archiveFmt, repo.DefaultBranch),
 		&map[string]string{
 			"Authorization":   "Bearer " + token,
 			"Accept":          "application/vnd.github+json",
-			"Accept-Encoding": "gzip",
+			"Accept-Encoding": acceptEncoding,
 		},
 	)
 	if err != nil {

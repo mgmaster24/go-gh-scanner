@@ -8,6 +8,8 @@ import (
 	"github.com/mgmaster24/go-gh-scanner/config"
 )
 
+// GetPagedResults handles executing the provide API method until all results are retrieved.
+// The number of results per page is determined the github.ListOptions.
 func GetPagedResults[T any](
 	config *config.AppConfig,
 	options *github.ListOptions,
@@ -34,6 +36,7 @@ func GetPagedResults[T any](
 	return results, nil
 }
 
+// Waits for the GitHub API rate limit to be reset.
 func WaitForRateLimit(err error, resp *github.Response) bool {
 	if _, ok := err.(*github.RateLimitError); ok {
 		// Waiting for rate limit to refresh

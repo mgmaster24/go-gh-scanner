@@ -1,3 +1,4 @@
+// archive-utils.go - Provides utility methods for handling archives
 package utils
 
 import (

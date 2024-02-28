@@ -1,3 +1,5 @@
+// config-utils.go - provide utility methods for handling and manipulating data provided
+// in the AppConfig struct instance
 package config
 
 import (
@@ -7,10 +9,7 @@ import (
 	"github.com/mgmaster24/go-gh-scanner/utils"
 )
 
-func ReadConfig(fileName string, configVar Config) error {
-	return configVar.Read(fileName)
-}
-
+// Returns the Language object associated with the provided string
 func (config *AppConfig) GetLanguage(lang string) *Language {
 	for _, l := range config.Languages {
 		if l.Name == lang {
@@ -21,6 +20,11 @@ func (config *AppConfig) GetLanguage(lang string) *Language {
 	return nil
 }
 
+// Gets a list of file extensions associated with each defined language in the config
+//
+// Example Language Definition:
+//
+// Language { Name: "HTML", Extension: ".html" }
 func (config *AppConfig) GetLanguageExts() []string {
 	exts := make([]string, len(config.Languages))
 	for i, l := range config.Languages {
@@ -30,20 +34,25 @@ func (config *AppConfig) GetLanguageExts() []string {
 	return exts
 }
 
+// Converts the PerPage ScanConfig value to a githubListOptions pointer
 func (config *AppConfig) ToListOptions() *github.ListOptions {
 	return &github.ListOptions{PerPage: config.ScanConfig.PerPage}
 }
 
+// Gets the short relative value of a dependency
+//
+// npm deps are generally split by a backslash.  I.E. @angular/material
 func (config *AppConfig) GetShortDepName() string {
-	// npm deps are generally split by a backslash.  I.E. @angular/material
 	depParts := strings.Split(config.CurrentDep, "/")
 	return depParts[len(depParts)-1]
 }
 
+// Determines whether the repo value is in the ignore repos slice
 func (config *AppConfig) ShouldIgnoreRepo(repoName string) bool {
 	return isInStrArray(config.ReposToIgnore, repoName)
 }
 
+// Determines whether the team value is in the ignore repos slice
 func (config *AppConfig) ShouldIgnoreTeam(teamName string) bool {
 	return isInStrArray(config.TeamsToIgnore, teamName)
 }

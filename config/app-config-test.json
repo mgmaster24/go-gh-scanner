@@ -1,5 +1,5 @@
 {
-  "ghToken": "secret-gh-token",
+  "authToken": "secret-gh-token",
   "owner": "MyOrganization",
   "extractDir": "temp",
   "perPage": 100,
@@ -29,5 +29,10 @@
     "pd-team",
     "qa-team",
     "security-team"
-  ]
+  ],
+  "writerConfig": {
+    "destination": "my-results-table",
+    "destinationType": "table",
+    "useBatch": true
+  }
 }

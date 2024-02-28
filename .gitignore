@@ -36,4 +36,4 @@ go-gh-scanner
 temp
 
 # results
-results
+/results

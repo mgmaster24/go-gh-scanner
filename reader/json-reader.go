@@ -6,6 +6,8 @@ import (
 	"os"
 )
 
+// ReadJSNOData is a generic method that will read JSON data into the
+// provided generic type instance
 func ReadJSONData[T any](fileName string) (T, error) {
 	var val T
 	configFile, err := os.Open(fileName)

@@ -5,18 +5,7 @@ import (
 )
 
 func TestAppConfigReader(t *testing.T) {
-	appConfig := &AppConfig{}
-	err := appConfig.Read("app-config-test.json")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	verifySettings(appConfig, t)
-}
-
-func TestAppConfigReaderUtil(t *testing.T) {
-	appConfig := &AppConfig{}
-	err := ReadConfig("app-config-test.json", appConfig)
+	appConfig, err := Read("app-config-test.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -95,6 +84,26 @@ func verifySettings(appConfig *AppConfig, t *testing.T) {
 
 	if appConfig.TeamsToIgnore[3] != "security-team" {
 		t.Fatal("Incorrect team read. Expected security-team")
+	}
+
+	if appConfig.WriterConfig.Destination == "" {
+		t.Fatal("Failed to read writer config")
+	}
+
+	if appConfig.WriterConfig.DestinationType == "" {
+		t.Fatal("Failed to read writer config")
+	}
+
+	if appConfig.WriterConfig.Destination != "my-results-table" {
+		t.Fatal("Failed to read writer config destination")
+	}
+
+	if appConfig.WriterConfig.DestinationType != TableDesitnation {
+		t.Fatal("Failed to read writer config destination type")
+	}
+
+	if appConfig.WriterConfig.UseBatchProcessing != true {
+		t.Fatal("Failed to read writer config batch processing value")
 	}
 }
 
