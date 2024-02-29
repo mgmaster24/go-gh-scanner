@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/mgmaster24/go-gh-scanner/aws_sdk"
 	"github.com/mgmaster24/go-gh-scanner/config"
 	"github.com/mgmaster24/go-gh-scanner/github_api"
 	"github.com/mgmaster24/go-gh-scanner/models/api_results"
@@ -18,7 +19,15 @@ func main() {
 		panic(err)
 	}
 
-	client := github_api.NewClient(appConfig.AuthToken)
+	// Get secrets service client
+	secretsService := aws_sdk.NewSecretsManagerClient()
+	// Get the auth token value from the secret service
+	authToken, err := secretsService.GetSecretString(appConfig.AuthTokenKey)
+	if err != nil {
+		panic(err)
+	}
+
+	client := github_api.NewClient(authToken)
 
 	// Run scan to get results
 	scanResults, err := client.ScanPackageDeps(appConfig)
@@ -56,7 +65,7 @@ func main() {
 
 	for _, repo := range ghRepoResults.Repos {
 		fmt.Println("Attempting to get repo archive for repo", repo.Name)
-		archiveFile, err := repo.GetRepoArchive(appConfig.AuthToken, api_results.Tarball, appConfig.ExtractDir)
+		archiveFile, err := repo.GetRepoArchive(authToken, api_results.Tarball, appConfig.ExtractDir)
 		if err != nil {
 			panic(fmt.Sprintf("Error getting repository archive %s", err))
 		}

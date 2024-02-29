@@ -18,7 +18,7 @@ func verifySettings(appConfig *AppConfig, t *testing.T) {
 		t.Fatal("Failed to read per page")
 	}
 
-	if appConfig.AuthToken != "secret-gh-token" {
+	if appConfig.AuthTokenKey != "secret-gh-token-key" {
 		t.Fatal("Failed to read auth token")
 	}
 

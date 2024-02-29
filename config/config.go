@@ -1,13 +1,15 @@
 package config
 
 type AppConfig struct {
-	AuthToken    string `json:"authToken"`
+	AuthTokenKey string `json:"authTokenKey"`
 	Owner        string `json:"owner"` // can be user or organization
 	ExtractDir   string `json:"extractDir"`
 	WriterConfig `json:"writerConfig"`
+	SecretKeys   `json:"secretKeys"`
 	DependencyScanConfig
 	ScanConfig
 	CloudConfig
+
 	CurrentDep string
 }
 
@@ -47,6 +49,9 @@ type WriterConfig struct {
 
 // Custom type for defining destinations
 type DestinationType string
+
+// SecretKeys
+type SecretKeys []string
 
 // Destination type enumeration
 //
