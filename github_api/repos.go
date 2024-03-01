@@ -12,8 +12,7 @@ import (
 // - PerPage
 // - Owner
 func (ghClient *GHClient) GetReposForOrg(config *config.AppConfig) ([]api_results.GHRepo, error) {
-	options := config.ToListOptions()
-	orgRepos, err := GetPagedResults[api_results.GHRepo](config, options, ghClient.getOrgRepoList)
+	orgRepos, err := GetPagedResults(config, config.ToListOptions(), ghClient.getOrgRepoList)
 	return orgRepos, err
 }
 
@@ -44,13 +43,16 @@ func (ghClient *GHClient) getOrgRepoList(config *config.AppConfig, options *gith
 }
 
 // Retrieves the repository data for the provided dependency scan results
-func (ghClient *GHClient) GetRepoData(repoScanResults api_results.RepoScanResult, config *config.AppConfig) (*api_results.GHRepo, error) {
-	repo, _, err := ghClient.Client.Repositories.Get(ghClient.Ctx, config.Owner, repoScanResults.RepoName)
+func (ghClient *GHClient) GetRepoData(
+	repoScanResults api_results.RepoScanResult,
+	owner string,
+	teamsToIgnore config.TeamsToIgnore) (*api_results.GHRepo, error) {
+	repo, _, err := ghClient.Client.Repositories.Get(ghClient.Ctx, owner, repoScanResults.RepoName)
 	if err != nil {
 		return nil, err
 	}
 
-	teams, err := ghClient.GetTeams(*repo.TeamsURL, config)
+	teams, err := ghClient.GetTeams(*repo.TeamsURL, teamsToIgnore)
 	if err != nil {
 		return nil, err
 	}
@@ -66,17 +68,17 @@ func (ghClient *GHClient) GetRepoData(repoScanResults api_results.RepoScanResult
 	}
 
 	ghRepo := &api_results.GHRepo{
-		Name:               *repo.Name,
-		FullName:           *repo.FullName,
-		Description:        description,
-		Owner:              *repo.Owner.Login,
-		Url:                *repo.HTMLURL,
-		Languages:          languages,
-		LastModified:       repo.GetPushedAt().Time,
-		Team:               teams,
-		APIUrl:             *repo.URL,
-		DefaultBranch:      *repo.DefaultBranch,
-		DependencyVersions: repoScanResults.DependencyVersion,
+		Name:              *repo.Name,
+		FullName:          *repo.FullName,
+		Description:       description,
+		Owner:             *repo.Owner.Login,
+		Url:               *repo.HTMLURL,
+		Languages:         languages,
+		LastModified:      repo.GetPushedAt().Time,
+		Team:              teams,
+		APIUrl:            *repo.URL,
+		DefaultBranch:     *repo.DefaultBranch,
+		DependencyVersion: repoScanResults.DependencyVersion,
 	}
 
 	return ghRepo, nil

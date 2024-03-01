@@ -30,8 +30,13 @@
     "qa-team",
     "security-team"
   ],
-  "writerConfig": {
+  "tokenResultsWriterConfig": {
     "destination": "my-results-table",
+    "destinationType": "table",
+    "useBatch": true
+  },
+  "repoResultsWriterConfig": {
+    "destination": "my-repos-table",
     "destinationType": "table",
     "useBatch": true
   }

@@ -13,7 +13,7 @@ import (
 // for a repository in the Go GitHub API
 //
 // Create and call the request using the provided teams URL
-func (ghClient *GHClient) GetTeams(teamsUrl string, config *config.AppConfig) (string, error) {
+func (ghClient *GHClient) GetTeams(teamsUrl string, teamsToIgnore config.TeamsToIgnore) (string, error) {
 	req, err := ghClient.createGetRequest(teamsUrl)
 	if err != nil {
 		return "", err
@@ -26,7 +26,7 @@ func (ghClient *GHClient) GetTeams(teamsUrl string, config *config.AppConfig) (s
 
 	defer resp.Body.Close()
 
-	return teamsResponse.GetTeamsString(config), nil
+	return teamsResponse.GetTeamsString(teamsToIgnore), nil
 }
 
 // GitHub Languages Request

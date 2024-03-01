@@ -1,4 +1,4 @@
-package aws_sdk
+package dynamodb_client
 
 import (
 	"context"
@@ -10,13 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/mgmaster24/go-gh-scanner/models"
 )
 
 // DynamoDBResultWriter struct
 //
 // Contains the destination and dynamodb client for interacting with DynamoDB
-type DynamoDBResultsWriter struct {
+type DynamoDBClient struct {
 	TableName string
 	Client    *dynamodb.Client
 	UseBatch  bool
@@ -25,7 +24,7 @@ type DynamoDBResultsWriter struct {
 // Attempts to create DynamoDB writer by loading the default AWS config
 // and creating a new dynamodb client from the config.  Also provides the
 // table name of the table items should be written to
-func NewDynamoDBResultsWriter(tableName string, useBatch bool) *DynamoDBResultsWriter {
+func NewDynamoDBClient(tableName string, useBatch bool) *DynamoDBClient {
 	sdkConfig, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
 		fmt.Println("Couldn't load default configuration. Have you set up your AWS account?")
@@ -33,23 +32,13 @@ func NewDynamoDBResultsWriter(tableName string, useBatch bool) *DynamoDBResultsW
 	}
 
 	ddbClient := dynamodb.NewFromConfig(sdkConfig)
-	ddbWriter := &DynamoDBResultsWriter{Client: ddbClient}
+	ddbWriter := &DynamoDBClient{Client: ddbClient}
 	ddbWriter.TableName = tableName
 	ddbWriter.UseBatch = useBatch
 	return ddbWriter
 }
 
-// Batch write the Token Results to the table name provided in the
-// DynamoDBResultsWriter
-func (ddbw *DynamoDBResultsWriter) Write(results models.TokenResults) error {
-	if ddbw.UseBatch {
-		return ddbw.writeBatch(results)
-	} else {
-		return ddbw.writePutItems(results)
-	}
-}
-
-func (ddbw *DynamoDBResultsWriter) writeBatch(results models.TokenResults) error {
+func writeBatch[T any](ddbw *DynamoDBClient, results []T) error {
 	written := 0
 	batchSize := 10
 	start := 0
@@ -64,7 +53,7 @@ func (ddbw *DynamoDBResultsWriter) writeBatch(results models.TokenResults) error
 		for _, result := range results[start:end] {
 			item, err := attributevalue.MarshalMap(result)
 			if err != nil {
-				return fmt.Errorf("couldn't marshall TokenResult %v for batch writing. Here's why: %v", result.Token, err)
+				return fmt.Errorf("couldn't marshall valeu %v for batch writing. Here's why: %v", result, err)
 			} else {
 				writeRequests = append(writeRequests, types.WriteRequest{PutRequest: &types.PutRequest{Item: item}})
 			}
@@ -95,11 +84,11 @@ func (ddbw *DynamoDBResultsWriter) writeBatch(results models.TokenResults) error
 	return nil
 }
 
-func (ddbw *DynamoDBResultsWriter) writePutItems(results models.TokenResults) error {
+func writeItem[T any](ddbw *DynamoDBClient, results []T) error {
 	for _, result := range results {
 		item, err := attributevalue.MarshalMap(result)
 		if err != nil {
-			return fmt.Errorf("couldn't marshall TokenResult %v for batch writing. Here's why: %v", result.Token, err)
+			return fmt.Errorf("couldn't marshall result %v for batch writing. Here's why: %v", result, err)
 		}
 
 		for {
@@ -113,7 +102,7 @@ func (ddbw *DynamoDBResultsWriter) writePutItems(results models.TokenResults) er
 					time.Sleep(3 * time.Second)
 					continue
 				}
-				return fmt.Errorf("couldn't put the item %v in %v table. Here's why: %v", result.Token, ddbw.TableName, err)
+				return fmt.Errorf("couldn't put the item %v in %v table. Here's why: %v", result, ddbw.TableName, err)
 			}
 
 			break

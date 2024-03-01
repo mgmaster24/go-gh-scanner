@@ -1,7 +1,6 @@
 package api_results
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"mime"
@@ -15,27 +14,35 @@ import (
 )
 
 type GHRepo struct {
-	Name               string       `json:"name"`
-	FullName           string       `json:"fullName"`
-	Description        string       `json:"description"`
-	Languages          []GHLanguage `json:"languages"`
-	Owner              string       `json:"owner"`
-	Url                string       `json:"url"`
-	Team               string       `json:"team"`
-	DefaultBranch      string       `json:"defaultBranch"`
-	LastModified       time.Time    `json:"lastModified"`
-	DependencyVersions string       `json:"dependencyVersion"`
-	APIUrl             string       `json:"apiUrl"`
-	HTMLUrl            string       `json:"htppUrl"`
+	Name              string       `json:"name"`
+	FullName          string       `json:"fullName"`
+	Description       string       `json:"description"`
+	Languages         []GHLanguage `json:"languages"`
+	Owner             string       `json:"owner"`
+	Url               string       `json:"url"`
+	Team              string       `json:"team"`
+	DefaultBranch     string       `json:"defaultBranch"`
+	LastModified      time.Time    `json:"lastModified"`
+	DependencyVersion string       `json:"dependencyVersion"`
+	APIUrl            string       `json:"apiUrl"`
 }
-
-type GHRepos []GHRepo
 
 type GHRepoResults struct {
 	Repos GHRepos `json:"repos"`
 	Count int     `json:"count"`
 }
 
+type GHRepoDynamoResult struct {
+	Repository   string    `dynamodbav:"repository" json:"repository"`
+	ScmSite      string    `dynamodbav:"scm_site" json:"scm_site"`
+	Team         string    `dynamodbav:"team" json:"team"`
+	Url          string    `dynamodbav:"url" json:"url"`
+	Version      string    `dynamodbav:"version" json:"version"`
+	LastModified time.Time `dynamodbav:"lastModified" json:"lastModified"`
+}
+
+type GHRepos []GHRepo
+type GHRepoDynamoResults []GHRepoDynamoResult
 type ArchiveFormat string
 
 const (
@@ -46,12 +53,8 @@ const (
 	Zipball ArchiveFormat = "zipball"
 )
 
-func (ghRepoResults *GHRepoResults) SaveRepoResultsToFile(fileName string) error {
+func (ghRepoResults GHRepoDynamoResults) SaveRepoResultsToFile(fileName string) error {
 	return writer.MarshallAndSave(fileName, ghRepoResults)
-}
-
-func (ghRepoResults *GHRepoResults) SaveRepoResultsToAWS() error {
-	return errors.New("not implemented yet")
 }
 
 func (repo *GHRepo) GetRepoArchive(token string, archiveFmt ArchiveFormat, directory string) (string, error) {
@@ -103,4 +106,20 @@ func (repo *GHRepo) GetRepoArchive(token string, archiveFmt ArchiveFormat, direc
 	}
 
 	return fileName, nil
+}
+
+func (repos *GHRepos) ToDynamoDBResults() GHRepoDynamoResults {
+	dynamoRepoResults := make(GHRepoDynamoResults, 0)
+	for _, r := range *repos {
+		dynamoRepoResults = append(dynamoRepoResults, GHRepoDynamoResult{
+			Repository:   r.FullName,
+			ScmSite:      "GitHub",
+			Team:         r.Team,
+			Url:          r.Url,
+			Version:      r.DependencyVersion,
+			LastModified: r.LastModified,
+		})
+	}
+
+	return dynamoRepoResults
 }

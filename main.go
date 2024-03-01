@@ -14,6 +14,8 @@ import (
 )
 
 func main() {
+	// Change this to your config file name.
+	// TODO Change to use cli args
 	appConfig, err := config.Read("app-config.json")
 	if err != nil {
 		panic(err)
@@ -27,6 +29,7 @@ func main() {
 		panic(err)
 	}
 
+	// Create the github api client
 	client := github_api.NewClient(authToken)
 
 	// Run scan to get results
@@ -36,13 +39,18 @@ func main() {
 	}
 
 	fmt.Println("Getting repository data for repos found during dependency scan.")
-	ghRepoResults, err := scanResults.ToRepoData(appConfig, client.GetRepoData)
+	ghRepoResults, err := scanResults.ToRepoData(appConfig.Owner, appConfig.TeamsToIgnore, client.GetRepoData)
 	if err != nil {
 		panic(err)
 	}
 
 	fmt.Println("Saving repository results")
-	err = ghRepoResults.SaveRepoResultsToFile("repo-results.json")
+	writer, err := results.CreateResultsWriter(appConfig.RepoResultsConfig)
+	if err != nil {
+		panic(err)
+	}
+
+	err = writer.WriteRepoResults(ghRepoResults.Repos.ToDynamoDBResults())
 	if err != nil {
 		panic(err)
 	}
@@ -63,6 +71,7 @@ func main() {
 		panic(err)
 	}
 
+	writer.UpdateDestination(appConfig.TokenResultsConfig.Destination)
 	for _, repo := range ghRepoResults.Repos {
 		fmt.Println("Attempting to get repo archive for repo", repo.Name)
 		archiveFile, err := repo.GetRepoArchive(authToken, api_results.Tarball, appConfig.ExtractDir)
@@ -90,14 +99,7 @@ func main() {
 
 		fmt.Println("Saving token search results for repo", repo.Name)
 		tokenResults := tokenRefs.ToTokenResults(repo.FullName, repo.Url, repo.DefaultBranch)
-		// writing results - This is just and example of how to create an object as a
-		// ResultsWriter and write the results where you would like
-		resultsWriter, err := results.CreateResultsWriter(appConfig.WriterConfig)
-		if err != nil {
-			panic(err)
-		}
-
-		err = resultsWriter.Write(tokenResults)
+		err = writer.WriteTokenResults(tokenResults)
 		if err != nil {
 			panic(err)
 		}
@@ -115,7 +117,7 @@ func main() {
 		}
 	}
 
+	fmt.Println("Scan operation complete.  Exiting...")
 	// TODO
 	// Seperate module, component, class results
-	// Save results to Dynamo
 }

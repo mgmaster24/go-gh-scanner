@@ -1,11 +1,12 @@
 package config
 
 type AppConfig struct {
-	AuthTokenKey string `json:"authTokenKey"`
-	Owner        string `json:"owner"` // can be user or organization
-	ExtractDir   string `json:"extractDir"`
-	WriterConfig `json:"writerConfig"`
-	SecretKeys   `json:"secretKeys"`
+	AuthTokenKey       string       `json:"authTokenKey"`
+	Owner              string       `json:"owner"` // can be user or organization
+	ExtractDir         string       `json:"extractDir"`
+	TokenResultsConfig WriterConfig `json:"tokenResultsWriterConfig"`
+	RepoResultsConfig  WriterConfig `json:"repoResultsWriterConfig"`
+	SecretKeys         `json:"secretKeys"`
 	DependencyScanConfig
 	ScanConfig
 	CloudConfig
@@ -22,7 +23,7 @@ type DependencyScanConfig struct {
 	Languages     []Language `json:"languages"`
 	Dependencies  []string   `json:"dependencies"`
 	ReposToIgnore []string   `json:"reposToIgnore"`
-	TeamsToIgnore []string   `json:"teamsToIgnore"`
+	TeamsToIgnore `json:"teamsToIgnore"`
 }
 
 type Language struct {
@@ -52,6 +53,8 @@ type DestinationType string
 
 // SecretKeys
 type SecretKeys []string
+
+type TeamsToIgnore []string
 
 // Destination type enumeration
 //

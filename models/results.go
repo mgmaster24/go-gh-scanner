@@ -6,8 +6,8 @@ import (
 )
 
 type FileResult struct {
-	Path string
-	Link string
+	Path string `dynamodbav:"path"`
+	Link string `dynamodbav:"link"`
 }
 
 type FileResults []FileResult

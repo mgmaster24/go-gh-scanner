@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/mgmaster24/go-gh-scanner/models"
+	"github.com/mgmaster24/go-gh-scanner/models/api_results"
 	"github.com/mgmaster24/go-gh-scanner/utils"
 	"github.com/mgmaster24/go-gh-scanner/writer"
 )
@@ -21,10 +22,10 @@ func NewFileResultsWriter(destination string) *FileResultsWriter {
 	}
 }
 
-// FileResultWriter - Write
+// FileResultWriter - WriteTokenResults
 //
 // Writes the token results slice to a file in JSON format
-func (fileWriter *FileResultsWriter) Write(results models.TokenResults) error {
+func (fileWriter *FileResultsWriter) WriteTokenResults(results models.TokenResults) error {
 	// Might have zero results
 	if len(results) <= 0 {
 		return nil
@@ -45,4 +46,16 @@ func (fileWriter *FileResultsWriter) Write(results models.TokenResults) error {
 	}
 
 	return nil
+}
+
+// FileResultWriter - WriteRepoResults
+//
+// Writes the repo results slice to a file in JSON format
+func (fileWriter *FileResultsWriter) WriteRepoResults(results api_results.GHRepoDynamoResults) error {
+	return results.SaveRepoResultsToFile(fileWriter.Destination)
+}
+
+// Update the file writer destination
+func (writer *FileResultsWriter) UpdateDestination(destination string) {
+	writer.Destination = destination
 }

@@ -3,14 +3,17 @@ package results
 import (
 	"fmt"
 
-	"github.com/mgmaster24/go-gh-scanner/aws_sdk"
+	"github.com/mgmaster24/go-gh-scanner/aws_sdk/dynamodb_client"
 	"github.com/mgmaster24/go-gh-scanner/config"
 	"github.com/mgmaster24/go-gh-scanner/models"
+	"github.com/mgmaster24/go-gh-scanner/models/api_results"
 )
 
-// Interface for defining token result saving
+// Interface for defining result saving features
 type ResultsWriter interface {
-	Write(results models.TokenResults) error
+	WriteTokenResults(results models.TokenResults) error
+	WriteRepoResults(results api_results.GHRepoDynamoResults) error
+	UpdateDestination(destination string)
 }
 
 // Create a writer for the destination type provided in the writer config.
@@ -24,7 +27,7 @@ func CreateResultsWriter(writerConfig config.WriterConfig) (ResultsWriter, error
 	case config.FileDestination:
 		return NewFileResultsWriter(writerConfig.Destination), nil
 	case config.TableDesitnation:
-		return aws_sdk.NewDynamoDBResultsWriter(writerConfig.Destination, writerConfig.UseBatchProcessing), nil
+		return dynamodb_client.NewDynamoDBClient(writerConfig.Destination, writerConfig.UseBatchProcessing), nil
 	}
 
 	return nil, fmt.Errorf("no ResultsWriter was created based on the provided configuration. Config %v", writerConfig)

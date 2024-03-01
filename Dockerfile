@@ -10,7 +10,7 @@ COPY go.mod go.sum ./
 
 # Copy the source code. Note the slash at the end, as explained in
 # https://docs.docker.com/engine/reference/builder/#copy
-COPY aws_sdk/*.go ./aws_sdk/
+COPY aws_sdk/ ./aws_sdk/
 COPY config/*go ./config/
 COPY github_api/*go ./github_api/
 COPY models/ ./models/
@@ -21,7 +21,7 @@ COPY utils/ ./utils/
 COPY writer/ ./writer/
 COPY main.go ./
 
-# Copy Configuration Files
+# Copy Configuration Files - These need to change best on your application
 COPY app-config.json ng-tokens.json ./
 
 # Download go modules

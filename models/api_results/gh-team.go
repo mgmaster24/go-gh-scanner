@@ -23,10 +23,10 @@ func (resp *TeamsResponse) Write(data []byte) (n int, err error) {
 	return len(data), nil
 }
 
-func (teamsResponse *TeamsResponse) GetTeamsString(config *config.AppConfig) string {
+func (teamsResponse *TeamsResponse) GetTeamsString(teamsToIgnore config.TeamsToIgnore) string {
 	team := ""
 	for _, tr := range teamsResponse.Teams {
-		if !config.ShouldIgnoreTeam(*tr.Slug) {
+		if !teamsToIgnore.ShouldIgnoreTeam(*tr.Slug) {
 			if team == "" {
 				team = *tr.Slug
 			} else {

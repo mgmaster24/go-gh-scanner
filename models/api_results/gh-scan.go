@@ -34,11 +34,12 @@ func SaveCodeScanResults(fileName string, results []*CodeScanResults) error {
 }
 
 func (scanResults RepoScanResults) ToRepoData(
-	config *config.AppConfig,
-	getRepoData func(sr RepoScanResult, config *config.AppConfig) (*GHRepo, error)) (*GHRepoResults, error) {
+	owner string,
+	teamsToIgnore config.TeamsToIgnore,
+	getRepoData func(sr RepoScanResult, owner string, teamsToIgnore config.TeamsToIgnore) (*GHRepo, error)) (*GHRepoResults, error) {
 	repoResults := make(GHRepos, 0)
 	for _, sr := range scanResults {
-		repoData, err := getRepoData(sr, config)
+		repoData, err := getRepoData(sr, owner, teamsToIgnore)
 		if err != nil {
 			return nil, err
 		}
