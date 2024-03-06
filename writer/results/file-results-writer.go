@@ -51,7 +51,7 @@ func (fileWriter *FileResultsWriter) WriteTokenResults(results models.TokenResul
 // FileResultWriter - WriteRepoResults
 //
 // Writes the repo results slice to a file in JSON format
-func (fileWriter *FileResultsWriter) WriteRepoResults(results api_results.GHRepoDynamoResults) error {
+func (fileWriter *FileResultsWriter) WriteRepoResults(results api_results.GHRepoWriteResults) error {
 	return results.SaveRepoResultsToFile(fileWriter.Destination)
 }
 

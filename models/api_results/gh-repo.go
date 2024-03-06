@@ -32,7 +32,7 @@ type GHRepoResults struct {
 	Count int     `json:"count"`
 }
 
-type GHRepoDynamoResult struct {
+type GHRepoWriteResult struct {
 	Repository   string    `dynamodbav:"repository" json:"repository"`
 	ScmSite      string    `dynamodbav:"scm_site" json:"scm_site"`
 	Team         string    `dynamodbav:"team" json:"team"`
@@ -42,7 +42,7 @@ type GHRepoDynamoResult struct {
 }
 
 type GHRepos []GHRepo
-type GHRepoDynamoResults []GHRepoDynamoResult
+type GHRepoWriteResults []GHRepoWriteResult
 type ArchiveFormat string
 
 const (
@@ -53,7 +53,7 @@ const (
 	Zipball ArchiveFormat = "zipball"
 )
 
-func (ghRepoResults GHRepoDynamoResults) SaveRepoResultsToFile(fileName string) error {
+func (ghRepoResults GHRepoWriteResults) SaveRepoResultsToFile(fileName string) error {
 	return writer.MarshallAndSave(fileName, ghRepoResults)
 }
 
@@ -108,10 +108,10 @@ func (repo *GHRepo) GetRepoArchive(token string, archiveFmt ArchiveFormat, direc
 	return fileName, nil
 }
 
-func (repos *GHRepos) ToDynamoDBResults() GHRepoDynamoResults {
-	dynamoRepoResults := make(GHRepoDynamoResults, 0)
+func (repos *GHRepos) ToWriteResults() GHRepoWriteResults {
+	dynamoRepoResults := make(GHRepoWriteResults, 0)
 	for _, r := range *repos {
-		dynamoRepoResults = append(dynamoRepoResults, GHRepoDynamoResult{
+		dynamoRepoResults = append(dynamoRepoResults, GHRepoWriteResult{
 			Repository:   r.FullName,
 			ScmSite:      "GitHub",
 			Team:         r.Team,

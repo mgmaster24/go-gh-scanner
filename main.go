@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/mgmaster24/go-gh-scanner/aws_sdk"
+	"github.com/mgmaster24/go-gh-scanner/cli"
 	"github.com/mgmaster24/go-gh-scanner/config"
 	"github.com/mgmaster24/go-gh-scanner/github_api"
 	"github.com/mgmaster24/go-gh-scanner/models/api_results"
@@ -14,9 +15,8 @@ import (
 )
 
 func main() {
-	// Change this to your config file name.
-	// TODO Change to use cli args
-	appConfig, err := config.Read("app-config.json")
+	flags := cli.InitFlags()
+	appConfig, err := config.Read(flags.AppConfig)
 	if err != nil {
 		panic(err)
 	}
@@ -50,7 +50,7 @@ func main() {
 		panic(err)
 	}
 
-	err = writer.WriteRepoResults(ghRepoResults.Repos.ToDynamoDBResults())
+	err = writer.WriteRepoResults(ghRepoResults.Repos.ToWriteResults())
 	if err != nil {
 		panic(err)
 	}
@@ -66,7 +66,7 @@ func main() {
 		panic(err)
 	}
 
-	err = tokenRetriever.Fetch("ng-tokens.json")
+	err = tokenRetriever.Fetch(flags.TokensConfig)
 	if err != nil {
 		panic(err)
 	}

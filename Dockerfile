@@ -11,6 +11,7 @@ COPY go.mod go.sum ./
 # Copy the source code. Note the slash at the end, as explained in
 # https://docs.docker.com/engine/reference/builder/#copy
 COPY aws_sdk/ ./aws_sdk/
+COPY cli/ ./cli
 COPY config/*go ./config/
 COPY github_api/*go ./github_api/
 COPY models/ ./models/
@@ -31,4 +32,4 @@ RUN go mod download
 RUN CGO_ENABLED=0 GOOS=linux go build -o /go-gh-scanner
 
 # Run
-CMD [ "/go-gh-scanner" ]
+CMD [ "/go-gh-scanner", "-c", "app-config.json", "-t", "ng-tokens.json" ]

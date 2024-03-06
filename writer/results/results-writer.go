@@ -12,7 +12,7 @@ import (
 // Interface for defining result saving features
 type ResultsWriter interface {
 	WriteTokenResults(results models.TokenResults) error
-	WriteRepoResults(results api_results.GHRepoDynamoResults) error
+	WriteRepoResults(results api_results.GHRepoWriteResults) error
 	UpdateDestination(destination string)
 }
 
