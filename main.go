@@ -17,107 +17,68 @@ import (
 func main() {
 	flags := cli.InitFlags()
 	appConfig, err := config.Read(flags.AppConfig)
-	if err != nil {
-		panic(err)
-	}
+	panicIfError(err)
 
 	// Get secrets service client
 	secretsService := aws_sdk.NewSecretsManagerClient()
 	// Get the auth token value from the secret service
 	authToken, err := secretsService.GetSecretString(appConfig.AuthTokenKey)
-	if err != nil {
-		panic(err)
-	}
+	panicIfError(err)
 
 	// Create the github api client
 	client := github_api.NewClient(authToken)
-
 	// Run scan to get results
 	scanResults, err := client.ScanPackageDeps(appConfig)
-	if err != nil {
-		panic(err)
-	}
+	panicIfError(err)
 
 	fmt.Println("Getting repository data for repos found during dependency scan.")
 	ghRepoResults, err := scanResults.ToRepoData(appConfig.Owner, appConfig.TeamsToIgnore, client.GetRepoData)
-	if err != nil {
-		panic(err)
-	}
+	panicIfError(err)
 
 	fmt.Println("Saving repository results")
 	writer, err := results.CreateResultsWriter(appConfig.RepoResultsConfig)
-	if err != nil {
-		panic(err)
-	}
+	panicIfError(err)
 
-	err = writer.WriteRepoResults(ghRepoResults.Repos.ToWriteResults())
-	if err != nil {
-		panic(err)
-	}
-
-	err = utils.CreateDir(appConfig.ExtractDir)
-	if err != nil {
-		panic(err)
-	}
+	panicIfError(writer.WriteRepoResults(ghRepoResults.Repos.ToWriteResults()))
+	panicIfError(utils.CreateDir(appConfig.ExtractDir))
 
 	// get tokens - This is just and example of how to read tokens of different types for search
 	tokenRetriever, err := tokens.CreateTokenReader(tokens.NGTokenReaderType)
-	if err != nil {
-		panic(err)
-	}
-
-	err = tokenRetriever.Fetch(flags.TokensConfig)
-	if err != nil {
-		panic(err)
-	}
+	panicIfError(err)
+	panicIfError(tokenRetriever.Fetch(flags.TokensConfig))
 
 	writer.UpdateDestination(appConfig.TokenResultsConfig.Destination)
 	for _, repo := range ghRepoResults.Repos {
 		fmt.Println("Attempting to get repo archive for repo", repo.Name)
 		archiveFile, err := repo.GetRepoArchive(authToken, api_results.Tarball, appConfig.ExtractDir)
-		if err != nil {
-			panic(fmt.Sprintf("Error getting repository archive %s", err))
-		}
+		panicIfError(fmt.Errorf("error getting repository archive %s", err))
 
 		// extract gzip
 		directory, err := utils.ExtractGZIP(archiveFile, appConfig.ExtractDir)
-		if err != nil {
-			panic(err)
-		}
-
+		panicIfError(err)
 		// get files for language extensions
 		langFiles, err := utils.GetFilesByExtension(directory, appConfig.GetLanguageExts())
-		if err != nil {
-			panic(err)
-		}
-
+		panicIfError(err)
 		// search language specific files
 		tokenRefs, err := search.FindTokenRefsInFiles(langFiles, tokenRetriever.ToTokens(), directory)
-		if err != nil {
-			panic(err)
-		}
+		panicIfError(err)
 
+		// write tokens search results
 		fmt.Println("Saving token search results for repo", repo.Name)
 		tokenResults := tokenRefs.ToTokenResults(repo.FullName, repo.Url, repo.DefaultBranch)
-		err = writer.WriteTokenResults(tokenResults)
-		if err != nil {
-			panic(err)
-		}
+		panicIfError(writer.WriteTokenResults(tokenResults))
 
 		// Remove extracted directory
-		err = utils.RemoveDir(directory)
-		if err != nil {
-			panic(err)
-		}
-
+		panicIfError(utils.RemoveDir(directory))
 		// Remove the archive file
-		err = utils.RemoveFile(archiveFile)
-		if err != nil {
-			panic(err)
-		}
+		panicIfError(utils.RemoveFile(archiveFile))
 	}
 
 	fmt.Println("Scan operation complete.  Exiting...")
-	// TODO
-	// Seperate module, component, class results
+}
+
+func panicIfError(e error) {
+	if e != nil {
+		panic(e)
+	}
 }

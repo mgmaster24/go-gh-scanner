@@ -32,4 +32,4 @@ RUN go mod download
 RUN CGO_ENABLED=0 GOOS=linux go build -o /go-gh-scanner
 
 # Run
-CMD [ "/go-gh-scanner", "-c", "app-config.json", "-t", "ng-tokens.json" ]
+CMD [ "/go-gh-scanner", "-c", "enter-your-config.json", "-t", "enter-your-tokens.json" ]
