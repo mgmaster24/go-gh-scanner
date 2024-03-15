@@ -20,6 +20,15 @@ func CreateDir(path string) error {
 	return nil
 }
 
+func CreateFile(fileName string) (*os.File, error) {
+	f, err := os.Create(fileName)
+	if err != nil {
+		return nil, err
+	}
+
+	return f, nil
+}
+
 func RemoveDir(dir string) error {
 	return os.RemoveAll(dir)
 }

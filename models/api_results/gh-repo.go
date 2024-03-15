@@ -73,12 +73,13 @@ func (repo *GHRepo) GetRepoArchive(token string, archiveFmt ArchiveFormat, direc
 		},
 	)
 	if err != nil {
-		return "", err
+
+		return "", fmt.Errorf("error getting repository archive %s", err)
 	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("error getting repository archive %s", err)
 	}
 
 	defer resp.Body.Close()
@@ -88,13 +89,13 @@ func (repo *GHRepo) GetRepoArchive(token string, archiveFmt ArchiveFormat, direc
 	// header of the respons
 	_, mtm, err := mime.ParseMediaType(resp.Header.Get("Content-Disposition"))
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("error getting repository archive %s", err)
 	}
 
 	fileName := filepath.Join(directory, mtm["filename"])
 	f, err := os.Create(fileName)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("error getting repository archive %s", err)
 	}
 
 	defer f.Close()
@@ -102,7 +103,7 @@ func (repo *GHRepo) GetRepoArchive(token string, archiveFmt ArchiveFormat, direc
 	// Response body is a gzip file
 	_, err = io.Copy(f, resp.Body)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("error getting repository archive %s", err)
 	}
 
 	return fileName, nil

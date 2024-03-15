@@ -1,7 +1,10 @@
 // utils.go - Provide generic utility methods.
 package utils
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 // Remove any duplicate tokens for a slice of tokens
 func RemoveDuplicates(tokens []string) []string {
@@ -16,6 +19,20 @@ func RemoveDuplicates(tokens []string) []string {
 	}
 
 	return results
+}
+
+func RemoveDuplicate[T comparable](sliceList []T) []T {
+	allKeys := make(map[T]bool)
+	list := []T{}
+	for _, item := range sliceList {
+		if _, value := allKeys[item]; !value {
+			allKeys[item] = true
+			list = append(list, item)
+		} else {
+			fmt.Println("Found Dupe", item)
+		}
+	}
+	return list
 }
 
 // Do the strings match
@@ -55,4 +72,10 @@ func IsStrInStrArray(vals []string, strToCheck string) bool {
 	}
 
 	return false
+}
+
+func PanicIfError(e error) {
+	if e != nil {
+		panic(e)
+	}
 }

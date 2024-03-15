@@ -6,16 +6,12 @@ import (
 
 type FragmentStr string
 
-func (f FragmentStr) AsString() string {
+func (f FragmentStr) asString() string {
 	return string(f)
 }
 
-func ToFragmentStr(str string) FragmentStr {
-	return FragmentStr(str)
-}
-
 func (fragment FragmentStr) GetDepVersion(currDep string) (string, bool) {
-	fragStr := fragment.AsString()
+	fragStr := fragment.asString()
 	depVersion := ""
 	ok := false
 	if strings.Contains(fragStr, currDep) {

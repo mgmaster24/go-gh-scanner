@@ -57,12 +57,13 @@ func ExtractGZIP(gzFileName string, destination string) (string, error) {
 			}
 		// file
 		case tar.TypeReg:
-			f, err := os.OpenFile(target, os.O_CREATE|os.O_RDWR, os.FileMode(hdr.Mode))
+			f, err := os.Create(target)
 			if err != nil {
 				return "", err
 			}
 
-			if _, err := io.Copy(f, tr); err != nil {
+			_, err = io.Copy(f, tr)
+			if err != nil {
 				return "", err
 			}
 

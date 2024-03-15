@@ -1,6 +1,8 @@
 package api_results
 
 import (
+	"fmt"
+
 	"github.com/mgmaster24/go-gh-scanner/config"
 	"github.com/mgmaster24/go-gh-scanner/writer"
 )
@@ -29,10 +31,6 @@ func (scanResults *ScanResults) SaveScanResults(fileName string) error {
 	return writer.MarshallAndSave(fileName, scanResults)
 }
 
-func SaveCodeScanResults(fileName string, results []*CodeScanResults) error {
-	return writer.MarshallAndSave(fileName, results)
-}
-
 func (scanResults RepoScanResults) ToRepoData(
 	owner string,
 	teamsToIgnore config.TeamsToIgnore,
@@ -47,4 +45,18 @@ func (scanResults RepoScanResults) ToRepoData(
 	}
 
 	return &GHRepoResults{Repos: repoResults, Count: len(repoResults)}, nil
+}
+
+func (scanResults RepoScanResults) RemoveDuplicates() RepoScanResults {
+	allKeys := make(map[string]bool)
+	list := RepoScanResults{}
+	for _, item := range scanResults {
+		if _, value := allKeys[item.RepoName]; !value {
+			allKeys[item.RepoName] = true
+			list = append(list, item)
+		} else {
+			fmt.Println("Removing", item)
+		}
+	}
+	return list
 }
