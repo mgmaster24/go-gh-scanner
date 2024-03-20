@@ -33,7 +33,7 @@ func main() {
 	utils.PanicIfError(err)
 
 	fmt.Println("Getting repository data for repos found during dependency scan.")
-	ghRepoResults, err := scanResults.ToRepoData(appConfig.Owner, appConfig.TeamsToIgnore, client.GetRepoData)
+	ghRepoResults, err := scanResults.ToRepoDataAsync(appConfig.Owner, appConfig.TeamsToIgnore, client.GetRepoData)
 	utils.PanicIfError(err)
 
 	fmt.Println("Saving repository results")
