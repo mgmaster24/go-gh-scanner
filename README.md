@@ -142,3 +142,29 @@ Follow the steps below to run the application
 
 ## Questions or Comments
 If you have a question or comment, please feel free to open an issue in this repo and I will do my best to address it in a timely manner.
+
+## 🤝 Contributing
+
+### Clone the repo
+
+```bash
+git clone https://github.com/mgmaster24/go-gh-scanner
+cd go-gh-scanner
+```
+
+### Build the project
+
+```bash
+go build
+```
+
+### Run the project
+
+```bash
+See the tokens section for defining 
+./go-gh-scanner
+```
+
+### Submit a pull request
+
+If you'd like to contribute, please fork the repository and open a pull request to the `main` branch.
