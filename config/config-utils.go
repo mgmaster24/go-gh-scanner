@@ -39,14 +39,6 @@ func (config *AppConfig) ToListOptions() *github.ListOptions {
 	return &github.ListOptions{PerPage: config.ScanConfig.PerPage}
 }
 
-// Gets the short relative value of a dependency
-//
-// npm deps are generally split by a backslash.  I.E. @angular/material
-func (config *AppConfig) GetShortDepName() string {
-	depParts := strings.Split(config.CurrentDep, "/")
-	return depParts[len(depParts)-1]
-}
-
 // Determines whether the repo value is in the ignore repos slice
 func (config *AppConfig) ShouldIgnoreRepo(repoName string) bool {
 	return isInStrArray(config.ReposToIgnore, repoName)

@@ -36,7 +36,7 @@ func (ghClient *GHClient) searchPackageFilesForDeps(config *config.AppConfig, op
 	}
 	searchResult, resp, err := ghClient.Client.Search.Code(
 		ghClient.Ctx,
-		fmt.Sprintf("%sin:file filename:%s %s", orgFilter, config.PackageFile, config.GetShortDepName()),
+		fmt.Sprintf("%sfilename:%s %s", orgFilter, config.PackageFile, config.CurrentDep),
 		&github.SearchOptions{
 			TextMatch:   true,
 			ListOptions: *options,
