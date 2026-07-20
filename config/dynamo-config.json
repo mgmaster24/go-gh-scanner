@@ -2,7 +2,7 @@
   "extractDir": "temp",
   "perPage": 100,
   "packageFile": "package.json",
-  "owner": "m2s2",
+  "owner": "",
   "dependencies": [
     "@m2s2/ng-lib",
     "@m2s2/react-lib",
