@@ -8,17 +8,19 @@ type FileResult struct {
 type FileResults []FileResult
 
 type TokenResult struct {
-	Token    string      `dynamodbav:"component" json:"token"`
-	RepoName string      `dynamodbav:"repo" json:"repo"`
-	Files    FileResults `dynamodbav:"files" json:"files"`
+	Repo      string      `dynamodbav:"repo" json:"repo"`
+	Sk        string      `dynamodbav:"sk" json:"sk"`
+	Component string      `dynamodbav:"component" json:"component"`
+	Files     FileResults `dynamodbav:"files" json:"files"`
 }
 
 type TokenResults []TokenResult
 
 func NewTokenResult(token, repoName string, results FileResults) TokenResult {
 	return TokenResult{
-		Token:    token,
-		RepoName: repoName,
-		Files:    results,
+		Repo:      repoName,
+		Sk:        "COMP#" + token,
+		Component: token,
+		Files:     results,
 	}
 }

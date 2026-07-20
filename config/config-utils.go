@@ -52,10 +52,7 @@ func (config *AppConfig) ShouldIgnoreRepo(repoName string) bool {
 	return isInStrArray(config.ReposToIgnore, repoName)
 }
 
-// Determines whether the team value is in the ignore repos slice
-func (teamsToIgnore TeamsToIgnore) ShouldIgnoreTeam(teamName string) bool {
-	return isInStrArray(teamsToIgnore, teamName)
-}
+
 
 func isInStrArray(vals []string, strToCheck string) bool {
 	for _, val := range vals {

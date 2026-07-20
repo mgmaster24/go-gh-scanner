@@ -79,3 +79,16 @@ func PanicIfError(e error) {
 		panic(e)
 	}
 }
+
+// Secret wraps a sensitive string value so it cannot be accidentally logged
+// or serialized. Use Value() to retrieve the underlying string for API calls.
+type Secret struct {
+	value string
+}
+
+func NewSecret(v string) Secret        { return Secret{value: v} }
+func (s Secret) Value() string         { return s.value }
+func (s Secret) String() string        { return "[REDACTED]" }
+func (s Secret) GoString() string      { return "[REDACTED]" }
+func (s Secret) MarshalText() ([]byte, error) { return []byte("[REDACTED]"), nil }
+func (s Secret) MarshalJSON() ([]byte, error) { return []byte(`"[REDACTED]"`), nil }

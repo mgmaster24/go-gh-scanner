@@ -3,61 +3,36 @@ package github_api
 import (
 	"net/http"
 
-	"github.com/mgmaster24/go-gh-scanner/config"
+	"github.com/google/go-github/github"
 	"github.com/mgmaster24/go-gh-scanner/models/api_results"
 )
 
-// GitHub Teams Request
-//
-// There is not a provided method for retrieving the list of teams
-// for a repository in the Go GitHub API
-//
-// Create and call the request using the provided teams URL
-func (ghClient *GHClient) GetTeams(teamsUrl string, teamsToIgnore config.TeamsToIgnore) (string, error) {
-	req, err := ghClient.createGetRequest(teamsUrl)
-	if err != nil {
-		return "", err
-	}
-	var teamsResponse *api_results.TeamsResponse = &api_results.TeamsResponse{}
-	resp, err := ghClient.Client.Do(ghClient.Ctx, req, teamsResponse)
-	if err != nil {
-		return "", err
-	}
-
-	defer resp.Body.Close()
-
-	return teamsResponse.GetTeamsString(teamsToIgnore), nil
-}
-
-// GitHub Languages Request
-//
-// There is not a provided method for retrieving the list of language
-// for a repository in the Go GitHub API.
-//
-// Create and call the request using the provided teams URL
 func (ghClient *GHClient) GetLanguages(languagesUrl string) ([]api_results.GHLanguage, error) {
-	req, err := ghClient.createGetRequest(languagesUrl)
-	if err != nil {
-		return []api_results.GHLanguage{}, err
-	}
-
 	var languages map[string]int
-	resp, err := ghClient.Client.Do(ghClient.Ctx, req, &languages)
-	if err != nil {
-		return []api_results.GHLanguage{}, err
-	}
-
-	defer resp.Body.Close()
-
-	values := api_results.ToGHLanguageSlice(languages)
-	return values, nil
-}
-
-func (ghClient *GHClient) createGetRequest(url string) (*http.Request, error) {
-	req, err := ghClient.Client.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
+	if err := ghClient.doWithRateLimit(languagesUrl, &languages); err != nil {
 		return nil, err
 	}
+	return api_results.ToGHLanguageSlice(languages), nil
+}
 
-	return req, nil
+// doWithRateLimit executes a GET request against url, deserializing the
+// response into dest, and retries automatically if a rate limit is hit.
+func (ghClient *GHClient) doWithRateLimit(url string, dest any) error {
+	for {
+		req, err := ghClient.Client.NewRequest(http.MethodGet, url, nil)
+		if err != nil {
+			return err
+		}
+
+		resp, err := ghClient.Client.Do(ghClient.Ctx, req, dest)
+		if err != nil {
+			if resp != nil && WaitForRateLimit(err, &github.Response{Response: resp.Response}) {
+				continue
+			}
+			return err
+		}
+
+		resp.Body.Close()
+		return nil
+	}
 }

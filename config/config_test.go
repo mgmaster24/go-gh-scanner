@@ -22,10 +22,6 @@ func verifySettings(appConfig *AppConfig, t *testing.T) {
 		t.Fatal("Failed to read auth token")
 	}
 
-	if appConfig.Owner != "MyOrganization" {
-		t.Fatal("Failed to read organization")
-	}
-
 	if len(appConfig.Languages) == 0 {
 		t.Fatal("Failed to read languages")
 	}
@@ -62,68 +58,24 @@ func verifySettings(appConfig *AppConfig, t *testing.T) {
 		t.Fatal("Incorrect repo read")
 	}
 
-	if len(appConfig.TeamsToIgnore) == 0 {
-		t.Fatal("Failed to read ReposToIgnore")
+	if appConfig.ResultsConfig.Destination == "" {
+		t.Fatal("Failed to read results writer config")
 	}
 
-	if len(appConfig.TeamsToIgnore) > 4 {
-		t.Fatal("Read incorrect number of teams to ignore")
+	if appConfig.ResultsConfig.DestinationType == "" {
+		t.Fatal("Failed to read results writer config destination type")
 	}
 
-	if appConfig.TeamsToIgnore[0] != "software-team" {
-		t.Fatal("Incorrect team read. Expected software-team")
+	if appConfig.ResultsConfig.Destination != "my-scanner-table" {
+		t.Fatal("Failed to read results writer config destination")
 	}
 
-	if appConfig.TeamsToIgnore[1] != "pd-team" {
-		t.Fatal("Incorrect team read. Expected pd-team")
+	if appConfig.ResultsConfig.DestinationType != TableDestination {
+		t.Fatal("Failed to read results writer config destination type")
 	}
 
-	if appConfig.TeamsToIgnore[2] != "qa-team" {
-		t.Fatal("Incorrect team read. Expected qa-team")
-	}
-
-	if appConfig.TeamsToIgnore[3] != "security-team" {
-		t.Fatal("Incorrect team read. Expected security-team")
-	}
-
-	if appConfig.TokenResultsConfig.Destination == "" {
-		t.Fatal("Failed to read writer config")
-	}
-
-	if appConfig.TokenResultsConfig.DestinationType == "" {
-		t.Fatal("Failed to read writer config")
-	}
-
-	if appConfig.TokenResultsConfig.Destination != "my-results-table" {
-		t.Fatal("Failed to read writer config destination")
-	}
-
-	if appConfig.TokenResultsConfig.DestinationType != TableDesitnation {
-		t.Fatal("Failed to read writer config destination type")
-	}
-
-	if appConfig.TokenResultsConfig.UseBatchProcessing != true {
-		t.Fatal("Failed to read writer config batch processing value")
-	}
-
-	if appConfig.RepoResultsConfig.Destination == "" {
-		t.Fatal("Failed to read writer config")
-	}
-
-	if appConfig.RepoResultsConfig.DestinationType == "" {
-		t.Fatal("Failed to read writer config")
-	}
-
-	if appConfig.RepoResultsConfig.Destination != "my-repos-table" {
-		t.Fatal("Failed to read writer config destination")
-	}
-
-	if appConfig.RepoResultsConfig.DestinationType != TableDesitnation {
-		t.Fatal("Failed to read writer config destination type")
-	}
-
-	if appConfig.RepoResultsConfig.UseBatchProcessing != true {
-		t.Fatal("Failed to read writer config batch processing value")
+	if appConfig.ResultsConfig.UseBatchProcessing != true {
+		t.Fatal("Failed to read results writer config batch processing value")
 	}
 }
 

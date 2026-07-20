@@ -13,6 +13,10 @@ import (
 	"github.com/mgmaster24/go-gh-scanner/writer"
 )
 
+// archiveClient is used for downloading repository archives. The 5-minute
+// timeout prevents goroutines from hanging indefinitely on a stalled download.
+var archiveClient = &http.Client{Timeout: 5 * time.Minute}
+
 type GHRepo struct {
 	Name              string       `json:"name"`
 	FullName          string       `json:"fullName"`
@@ -20,10 +24,11 @@ type GHRepo struct {
 	Languages         []GHLanguage `json:"languages"`
 	Owner             string       `json:"owner"`
 	Url               string       `json:"url"`
-	Team              string       `json:"team"`
 	DefaultBranch     string       `json:"defaultBranch"`
 	LastModified      time.Time    `json:"lastModified"`
+	Dependency        string       `json:"dependency"`
 	DependencyVersion string       `json:"dependencyVersion"`
+	Directory         string       `json:"directory"`
 	APIUrl            string       `json:"apiUrl"`
 }
 
@@ -33,11 +38,13 @@ type GHRepoResults struct {
 }
 
 type GHRepoWriteResult struct {
-	Repository   string    `dynamodbav:"repository" json:"repository"`
-	ScmSite      string    `dynamodbav:"scm_site" json:"scm_site"`
-	Team         string    `dynamodbav:"team" json:"team"`
-	Url          string    `dynamodbav:"url" json:"url"`
+	Repo         string    `dynamodbav:"repo" json:"repo"`
+	Sk           string    `dynamodbav:"sk" json:"sk"`
+	Dependency   string    `dynamodbav:"dependency" json:"dependency"`
 	Version      string    `dynamodbav:"version" json:"version"`
+	Url          string    `dynamodbav:"url" json:"url"`
+	Directory    string    `dynamodbav:"directory" json:"directory"`
+	ScmSite      string    `dynamodbav:"scm_site" json:"scm_site"`
 	LastModified time.Time `dynamodbav:"lastModified" json:"lastModified"`
 }
 
@@ -77,7 +84,7 @@ func (repo *GHRepo) GetRepoArchive(token string, archiveFmt ArchiveFormat, direc
 		return "", fmt.Errorf("error getting repository archive %s", err)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := archiveClient.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("error getting repository archive %s", err)
 	}
@@ -113,11 +120,13 @@ func (repos *GHRepos) ToWriteResults() GHRepoWriteResults {
 	dynamoRepoResults := make(GHRepoWriteResults, 0)
 	for _, r := range *repos {
 		dynamoRepoResults = append(dynamoRepoResults, GHRepoWriteResult{
-			Repository:   r.FullName,
-			ScmSite:      "GitHub",
-			Team:         r.Team,
-			Url:          r.Url,
+			Repo:         r.FullName,
+			Sk:           "DEP#" + r.Dependency,
+			Dependency:   r.Dependency,
 			Version:      r.DependencyVersion,
+			Url:          r.Url,
+			Directory:    r.Directory,
+			ScmSite:      "GitHub",
 			LastModified: r.LastModified,
 		})
 	}

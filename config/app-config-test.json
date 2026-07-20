@@ -1,6 +1,5 @@
 {
-  "authToken": "secret-gh-token",
-  "owner": "MyOrganization",
+  "authTokenKey": "secret-gh-token-key",
   "extractDir": "temp",
   "perPage": 100,
   "languages": [
@@ -24,19 +23,8 @@
   "reposToignore":[
     "ignore-this-repo"
   ],
-  "teamsToIgnore":[
-    "software-team",
-    "pd-team",
-    "qa-team",
-    "security-team"
-  ],
-  "tokenResultsWriterConfig": {
-    "destination": "my-results-table",
-    "destinationType": "table",
-    "useBatch": true
-  },
-  "repoResultsWriterConfig": {
-    "destination": "my-repos-table",
+  "resultsWriterConfig": {
+    "destination": "my-scanner-table",
     "destinationType": "table",
     "useBatch": true
   }

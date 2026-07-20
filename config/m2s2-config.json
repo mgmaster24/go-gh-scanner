@@ -1,0 +1,28 @@
+{
+  "extractDir": "temp",
+  "perPage": 100,
+  "languages": [
+    { "name": "TypeScript", "extension": ".ts" },
+    { "name": "TypeScript React", "extension": ".tsx" },
+    { "name": "JavaScript", "extension": ".js" },
+    { "name": "JavaScript React", "extension": ".jsx" },
+    { "name": "HTML", "extension": ".html" },
+    { "name": "Vue", "extension": ".vue" }
+  ],
+  "packageFile": "package.json",
+  "dependencies": [
+    "@m2s2/ng-lib",
+    "@m2s2/react-lib",
+    "@m2s2/vue-lib"
+  ],
+  "componentDiscovery": {
+    "owner": "YOUR_M2S2_SOURCE_ORG",
+    "repos": ["m2s2-ng-lib", "m2s2-react-lib", "m2s2-vue-lib"]
+  },
+  "reposToIgnore": [],
+  "resultsWriterConfig": {
+    "destination": "results",
+    "destinationType": "file",
+    "useBatch": false
+  }
+}

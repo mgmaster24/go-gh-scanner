@@ -1,17 +1,23 @@
 package config
 
 type AppConfig struct {
-	AuthTokenKey       string       `json:"authTokenKey"`
-	Owner              string       `json:"owner"` // can be user or organization
-	ExtractDir         string       `json:"extractDir"`
-	TokenResultsConfig WriterConfig `json:"tokenResultsWriterConfig"`
-	RepoResultsConfig  WriterConfig `json:"repoResultsWriterConfig"`
+	AuthTokenKey       string                  `json:"authTokenKey"`
+	Owner              string                  `json:"owner"` // optional — omit to scan all public GitHub repos
+	ExtractDir         string                  `json:"extractDir"`
+	ResultsConfig      WriterConfig            `json:"resultsWriterConfig"`
+	ComponentDiscovery ComponentDiscoveryConfig `json:"componentDiscovery"`
 	SecretKeys         `json:"secretKeys"`
 	DependencyScanConfig
 	ScanConfig
 	CloudConfig
 
 	CurrentDep string
+}
+
+// ComponentDiscoveryConfig points at the m2s2 source repos to scan for component definitions.
+type ComponentDiscoveryConfig struct {
+	Owner string   `json:"owner"`
+	Repos []string `json:"repos"`
 }
 
 type ScanConfig struct {
@@ -23,7 +29,6 @@ type DependencyScanConfig struct {
 	Languages     []Language `json:"languages"`
 	Dependencies  []string   `json:"dependencies"`
 	ReposToIgnore []string   `json:"reposToIgnore"`
-	TeamsToIgnore `json:"teamsToIgnore"`
 }
 
 type Language struct {
@@ -54,15 +59,13 @@ type DestinationType string
 // SecretKeys
 type SecretKeys []string
 
-type TeamsToIgnore []string
-
 // Destination type enumeration
 //
 // Where the results will be written to.
 const (
 	DefaultDestination DestinationType = "none"
 	FileDestination    DestinationType = "file"
-	TableDesitnation   DestinationType = "table"
+	TableDestination   DestinationType = "table"
 )
 
 type Config interface {

@@ -26,7 +26,7 @@ func CreateResultsWriter(writerConfig config.WriterConfig) (ResultsWriter, error
 	switch writerConfig.DestinationType {
 	case config.FileDestination:
 		return NewFileResultsWriter(writerConfig.Destination), nil
-	case config.TableDesitnation:
+	case config.TableDestination:
 		return dynamodb_client.NewDynamoDBClient(writerConfig.Destination, writerConfig.UseBatchProcessing), nil
 	}
 

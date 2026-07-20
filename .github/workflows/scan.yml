@@ -1,0 +1,36 @@
+name: m2s2 adoption scan
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # Every Monday at 06:00 UTC
+  workflow_dispatch:       # Allow manual trigger from the Actions tab
+
+permissions:
+  id-token: write   # required for OIDC AWS auth
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: true
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Build
+        run: go build -o go-gh-scanner .
+
+      - name: Run scanner
+        env:
+          GITHUB_TOKEN: ${{ secrets.SCANNER_GITHUB_TOKEN }}
+        run: ./go-gh-scanner -c config/m2s2-dynamo-config.json

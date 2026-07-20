@@ -8,7 +8,12 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
+
+// maxExtractedFileSize caps individual file extraction at 500 MB to guard
+// against decompression bombs in archive entries.
+const maxExtractedFileSize = 500 * 1024 * 1024
 
 // Extracts the gzip file represented by the file name and
 // extracts the content to the provided destination
@@ -26,6 +31,14 @@ func ExtractGZIP(gzFileName string, destination string) (string, error) {
 		return "", fmt.Errorf("error reading gzip from file. %e", err)
 	}
 
+	// Resolve destination to an absolute path once so every entry can be
+	// checked against it without repeated syscalls.
+	destAbs, err := filepath.Abs(destination)
+	if err != nil {
+		return "", fmt.Errorf("error resolving destination path: %w", err)
+	}
+	destPrefix := destAbs + string(os.PathSeparator)
+
 	tr := tar.NewReader(gzr)
 	for {
 		hdr, err := tr.Next()
@@ -41,35 +54,33 @@ func ExtractGZIP(gzFileName string, destination string) (string, error) {
 			continue
 		}
 
-		target := filepath.Join(destination, hdr.Name)
+		target := filepath.Join(destAbs, hdr.Name)
+
+		// Guard against Zip Slip: every extracted path must be inside destination.
+		if !strings.HasPrefix(target+string(os.PathSeparator), destPrefix) {
+			return "", fmt.Errorf("illegal file path in archive: %s", hdr.Name)
+		}
 
 		switch hdr.Typeflag {
-		// directory
 		case tar.TypeDir:
-			// set root directory
 			if root == "" {
 				root = target
 			}
 
-			err = CreateDir(target)
-			if err != nil {
+			if err = CreateDir(target); err != nil {
 				return "", err
 			}
-		// file
 		case tar.TypeReg:
 			f, err := os.Create(target)
 			if err != nil {
 				return "", err
 			}
 
-			_, err = io.Copy(f, tr)
-			if err != nil {
-				return "", err
-			}
-
-			// make sure to close the file
-			// we don't want to wait until the extraction operation completes
+			_, copyErr := io.Copy(f, io.LimitReader(tr, maxExtractedFileSize))
 			f.Close()
+			if copyErr != nil {
+				return "", copyErr
+			}
 		}
 	}
 	return root, nil

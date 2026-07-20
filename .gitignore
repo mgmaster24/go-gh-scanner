@@ -29,11 +29,21 @@ tokens.json
 code-scan-results.json
 ng-tokens.json
 
-# binary
+# binaries
 go-gh-scanner
+api/api
+infra/infra
 
 # extraction dir
 temp
 
 # results
 /results
+
+# CDK
+infra/cdk.out
+infra/cdk.json
+infra/cdk-outputs.json
+
+# API Lambda build output
+api/dist/

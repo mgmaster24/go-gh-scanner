@@ -12,18 +12,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
-// DynamoDBResultWriter struct
-//
-// Contains the destination and dynamodb client for interacting with DynamoDB
+// DynamoDBClient wraps a DynamoDB client with a target table name.
 type DynamoDBClient struct {
 	TableName string
 	Client    *dynamodb.Client
 	UseBatch  bool
 }
 
-// Attempts to create DynamoDB writer by loading the default AWS config
-// and creating a new dynamodb client from the config.  Also provides the
-// table name of the table items should be written to
+// NewDynamoDBClient loads the default AWS config and returns a DynamoDBClient
+// targeting the given table.
 func NewDynamoDBClient(tableName string, useBatch bool) *DynamoDBClient {
 	sdkConfig, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
@@ -31,80 +28,151 @@ func NewDynamoDBClient(tableName string, useBatch bool) *DynamoDBClient {
 		panic(err)
 	}
 
-	ddbClient := dynamodb.NewFromConfig(sdkConfig)
-	ddbWriter := &DynamoDBClient{Client: ddbClient}
-	ddbWriter.TableName = tableName
-	ddbWriter.UseBatch = useBatch
-	return ddbWriter
+	return &DynamoDBClient{
+		Client:    dynamodb.NewFromConfig(sdkConfig),
+		TableName: tableName,
+		UseBatch:  useBatch,
+	}
 }
 
-func writeBatch[T any](ddbw *DynamoDBClient, results []T) error {
-	written := 0
-	batchSize := 10
-	start := 0
-	end := start + batchSize
-	lenResults := len(results)
-	for start < lenResults {
-		var writeRequests []types.WriteRequest
-		if end > lenResults {
-			end = lenResults
+// deleteByKeyPrefix queries every item whose partition key equals pkValue and
+// whose sort key begins with skPrefix, then deletes them in batches of 25.
+// Pagination is handled automatically so large result sets are fully cleared.
+func deleteByKeyPrefix(ddbw *DynamoDBClient, pkAttr, pkValue, skAttr, skPrefix string) error {
+	ctx := context.TODO()
+	var lastKey map[string]types.AttributeValue
+
+	for {
+		resp, err := ddbw.Client.Query(ctx, &dynamodb.QueryInput{
+			TableName:              aws.String(ddbw.TableName),
+			KeyConditionExpression: aws.String("#pk = :pk AND begins_with(#sk, :prefix)"),
+			ExpressionAttributeNames: map[string]string{
+				"#pk": pkAttr,
+				"#sk": skAttr,
+			},
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":pk":     &types.AttributeValueMemberS{Value: pkValue},
+				":prefix": &types.AttributeValueMemberS{Value: skPrefix},
+			},
+			ProjectionExpression: aws.String("#pk, #sk"),
+			ExclusiveStartKey:    lastKey,
+		})
+		if err != nil {
+			return fmt.Errorf("error querying stale items (pk=%s value=%s sk_prefix=%s): %w", pkAttr, pkValue, skPrefix, err)
 		}
 
-		for _, result := range results[start:end] {
-			item, err := attributevalue.MarshalMap(result)
-			if err != nil {
-				return fmt.Errorf("couldn't marshall valeu %v for batch writing. Here's why: %v", result, err)
-			} else {
-				writeRequests = append(writeRequests, types.WriteRequest{PutRequest: &types.PutRequest{Item: item}})
+		if len(resp.Items) > 0 {
+			if err := deleteItems(ddbw, resp.Items, pkAttr, skAttr); err != nil {
+				return err
 			}
 		}
 
-		for {
-			_, err := ddbw.Client.BatchWriteItem(
-				context.TODO(),
-				&dynamodb.BatchWriteItemInput{
-					RequestItems: map[string][]types.WriteRequest{ddbw.TableName: writeRequests}})
+		lastKey = resp.LastEvaluatedKey
+		if len(lastKey) == 0 {
+			break
+		}
+	}
+
+	return nil
+}
+
+// deleteItems deletes the provided items in batches of 25, retrying
+// any unprocessed items until all are removed.
+func deleteItems(ddbw *DynamoDBClient, items []map[string]types.AttributeValue, pkAttr, skAttr string) error {
+	const batchSize = 25
+	ctx := context.TODO()
+
+	for start := 0; start < len(items); start += batchSize {
+		end := min(start+batchSize, len(items))
+
+		pending := make([]types.WriteRequest, 0, end-start)
+		for _, item := range items[start:end] {
+			pending = append(pending, types.WriteRequest{
+				DeleteRequest: &types.DeleteRequest{
+					Key: map[string]types.AttributeValue{
+						pkAttr: item[pkAttr],
+						skAttr: item[skAttr],
+					},
+				},
+			})
+		}
+
+		for len(pending) > 0 {
+			resp, err := ddbw.Client.BatchWriteItem(ctx, &dynamodb.BatchWriteItemInput{
+				RequestItems: map[string][]types.WriteRequest{ddbw.TableName: pending},
+			})
 			if err != nil {
 				if _, ok := err.(*types.ProvisionedThroughputExceededException); ok {
-					fmt.Println("exceeded the maximum write capacity units.  Retrying after 3 seconds...")
 					time.Sleep(3 * time.Second)
 					continue
 				}
-				return fmt.Errorf("couldn't add a batch of TokenResults to %v. Here's why: %v", ddbw.TableName, err)
-			} else {
-				written += len(writeRequests)
-				break
+				return fmt.Errorf("error deleting batch from %s: %w", ddbw.TableName, err)
 			}
+			// Retry any items DynamoDB could not process in this round.
+			pending = resp.UnprocessedItems[ddbw.TableName]
+		}
+	}
+
+	return nil
+}
+
+// writeBatch writes results in batches of 25 and retries any unprocessed items.
+func writeBatch[T any](ddbw *DynamoDBClient, results []T) error {
+	const batchSize = 25
+	ctx := context.TODO()
+
+	for start := 0; start < len(results); start += batchSize {
+		end := min(start+batchSize, len(results))
+
+		pending := make([]types.WriteRequest, 0, end-start)
+		for _, result := range results[start:end] {
+			item, err := attributevalue.MarshalMap(result)
+			if err != nil {
+				return fmt.Errorf("couldn't marshal value for batch write: %w", err)
+			}
+			pending = append(pending, types.WriteRequest{PutRequest: &types.PutRequest{Item: item}})
 		}
 
-		start = end
-		end += batchSize
+		for len(pending) > 0 {
+			resp, err := ddbw.Client.BatchWriteItem(ctx, &dynamodb.BatchWriteItemInput{
+				RequestItems: map[string][]types.WriteRequest{ddbw.TableName: pending},
+			})
+			if err != nil {
+				if _, ok := err.(*types.ProvisionedThroughputExceededException); ok {
+					fmt.Println("write capacity exceeded — retrying in 3 seconds...")
+					time.Sleep(3 * time.Second)
+					continue
+				}
+				return fmt.Errorf("couldn't batch write to %s: %w", ddbw.TableName, err)
+			}
+			pending = resp.UnprocessedItems[ddbw.TableName]
+		}
 	}
 
 	return nil
 }
 
 func writeItem[T any](ddbw *DynamoDBClient, results []T) error {
+	ctx := context.TODO()
 	for _, result := range results {
 		item, err := attributevalue.MarshalMap(result)
 		if err != nil {
-			return fmt.Errorf("couldn't marshall result %v for batch writing. Here's why: %v", result, err)
+			return fmt.Errorf("couldn't marshal result for PutItem: %w", err)
 		}
 
 		for {
-			_, err = ddbw.Client.PutItem(context.TODO(), &dynamodb.PutItemInput{
-				TableName: aws.String(ddbw.TableName), Item: item,
+			_, err = ddbw.Client.PutItem(ctx, &dynamodb.PutItemInput{
+				TableName: aws.String(ddbw.TableName),
+				Item:      item,
 			})
 			if err != nil {
-				fmt.Println(err)
 				if _, ok := err.(*types.RequestLimitExceeded); ok {
-					fmt.Println("exceeded the maximum write capacity units.  Retrying after 3 seconds...")
+					fmt.Println("request limit exceeded — retrying in 3 seconds...")
 					time.Sleep(3 * time.Second)
 					continue
 				}
-				return fmt.Errorf("couldn't put the item %v in %v table. Here's why: %v", result, ddbw.TableName, err)
+				return fmt.Errorf("couldn't put item in %s: %w", ddbw.TableName, err)
 			}
-
 			break
 		}
 	}

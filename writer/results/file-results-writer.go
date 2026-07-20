@@ -2,6 +2,8 @@ package results
 
 import (
 	"fmt"
+	"path/filepath"
+	"strings"
 
 	"github.com/mgmaster24/go-gh-scanner/models"
 	"github.com/mgmaster24/go-gh-scanner/models/api_results"
@@ -26,21 +28,17 @@ func NewFileResultsWriter(destination string) *FileResultsWriter {
 //
 // Writes the token results slice to a file in JSON format
 func (fileWriter *FileResultsWriter) WriteTokenResults(results models.TokenResults) error {
-	// Might have zero results
 	if len(results) <= 0 {
 		return nil
 	}
 
-	// create directory for repo results
-	dir := fileWriter.Destination + "/" + results[0].RepoName
-	err := utils.CreateDir(dir)
-	if err != nil {
+	dir := filepath.Join(fileWriter.Destination, "components", results[0].Repo)
+	if err := utils.CreateDir(dir); err != nil {
 		return err
 	}
 
 	for i, result := range results {
-		err := writer.MarshallAndSave(fmt.Sprintf("%s/results_%v.json", dir, i), result)
-		if err != nil {
+		if err := writer.MarshallAndSave(fmt.Sprintf("%s/results_%v.json", dir, i), result); err != nil {
 			return err
 		}
 	}
@@ -50,9 +48,42 @@ func (fileWriter *FileResultsWriter) WriteTokenResults(results models.TokenResul
 
 // FileResultWriter - WriteRepoResults
 //
-// Writes the repo results slice to a file in JSON format
+// Groups results by dependency and writes one JSON file per dependency into
+// the Destination directory. Results with no dependency are written to repos.json.
 func (fileWriter *FileResultsWriter) WriteRepoResults(results api_results.GHRepoWriteResults) error {
-	return results.SaveRepoResultsToFile(fileWriter.Destination)
+	if len(results) == 0 {
+		return nil
+	}
+
+	dir := filepath.Join(fileWriter.Destination, "repos")
+	if err := utils.CreateDir(dir); err != nil {
+		return err
+	}
+
+	byDep := make(map[string]api_results.GHRepoWriteResults)
+	for _, r := range results {
+		key := r.Dependency
+		if key == "" {
+			key = "repos"
+		}
+		byDep[key] = append(byDep[key], r)
+	}
+
+	for dep, depResults := range byDep {
+		fileName := filepath.Join(dir, depToFileName(dep))
+		if err := depResults.SaveRepoResultsToFile(fileName); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// depToFileName converts a dependency name like @m2s2/ng-lib to m2s2-ng-lib.json
+func depToFileName(dep string) string {
+	name := strings.ReplaceAll(dep, "@", "")
+	name = strings.ReplaceAll(name, "/", "-")
+	return name + ".json"
 }
 
 // Update the file writer destination

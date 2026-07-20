@@ -1,0 +1,65 @@
+name: Deploy infrastructure
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # OIDC AWS auth
+  contents: read
+  secrets: write    # gh secret set for AWS_ROLE_ARN and AWS_REGION
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: true
+          cache-dependency-path: |
+            infra/go.sum
+            api/go.sum
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install CDK CLI
+        run: npm install -g aws-cdk
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_INFRA_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Generate cdk.json
+        working-directory: infra
+        run: |
+          cat > cdk.json <<'EOF'
+          {
+            "app": "go run .",
+            "context": {
+              "tableName": "${{ vars.TABLE_NAME }}",
+              "githubRepo": "${{ github.repository }}",
+              "awsRegion": "${{ secrets.AWS_REGION }}",
+              "scanOwner": "${{ vars.SCAN_OWNER }}",
+              "discoveryOwner": "${{ vars.DISCOVERY_OWNER }}",
+              "discoveryRepos": ${{ vars.DISCOVERY_REPOS }},
+              "jwksUri": "${{ secrets.JWKS_URI }}",
+              "jwtIssuer": "${{ secrets.JWT_ISSUER }}",
+              "jwtAudience": "${{ secrets.JWT_AUDIENCE }}"
+            }
+          }
+          EOF
+
+      - name: Bootstrap CDK
+        run: cdk bootstrap
+        working-directory: infra
+
+      - name: Deploy
+        run: make deploy
+        working-directory: infra
