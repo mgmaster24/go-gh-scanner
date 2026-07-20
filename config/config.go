@@ -17,7 +17,9 @@ type AppConfig struct {
 // ComponentDiscoveryConfig points at the design system source repos to scan for component definitions.
 type ComponentDiscoveryConfig struct {
 	Owner string   `json:"owner"`
-	Repos []string `json:"repos"`
+	Repo  string   `json:"repo,omitempty"`   // single monorepo
+	Repos []string `json:"repos,omitempty"`  // multiple repos
+	Paths []string `json:"paths,omitempty"`  // workspace subdirs within Repo
 }
 
 type ScanConfig struct {

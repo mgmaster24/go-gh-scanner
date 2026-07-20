@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/mgmaster24/go-gh-scanner/utils"
 )
@@ -27,6 +28,9 @@ func ExtractComponentTokens(files []string) ([]string, error) {
 	tokens := make([]string, 0)
 
 	for _, file := range files {
+		if strings.Contains(filepath.Base(file), ".stories.") {
+			continue
+		}
 		var re *regexp.Regexp
 		switch filepath.Ext(file) {
 		case ".ts":

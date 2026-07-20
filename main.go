@@ -86,13 +86,23 @@ func main() {
 	}
 
 	var toks []string
-	if len(appConfig.ComponentDiscovery.Repos) > 0 {
-		slog.Info("auto-discovering components from source repos", "repos", appConfig.ComponentDiscovery.Repos)
+	disc := appConfig.ComponentDiscovery
+	if disc.Repo != "" {
+		slog.Info("auto-discovering components from monorepo", "repo", disc.Repo, "paths", disc.Paths)
+		toks, err = client.DiscoverComponentTokensFromMonorepo(
+			disc.Owner, disc.Repo, disc.Paths,
+			appConfig.ExtractDir, authToken.Value(),
+		)
+		if err != nil {
+			slog.Error("component discovery failed", "error", err)
+			os.Exit(1)
+		}
+		slog.Info("component discovery complete", "tokens_found", len(toks))
+	} else if len(disc.Repos) > 0 {
+		slog.Info("auto-discovering components from source repos", "repos", disc.Repos)
 		toks, err = client.DiscoverComponentTokens(
-			appConfig.ComponentDiscovery.Owner,
-			appConfig.ComponentDiscovery.Repos,
-			appConfig.ExtractDir,
-			authToken.Value(),
+			disc.Owner, disc.Repos,
+			appConfig.ExtractDir, authToken.Value(),
 		)
 		if err != nil {
 			slog.Error("component discovery failed", "error", err)

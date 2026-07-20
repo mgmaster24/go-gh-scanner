@@ -2,6 +2,7 @@ package github_api
 
 import (
 	"fmt"
+	"path/filepath"
 	"sync"
 
 	"github.com/mgmaster24/go-gh-scanner/models/api_results"
@@ -53,6 +54,58 @@ func (ghClient *GHClient) DiscoverComponentTokens(
 	}
 
 	return allTokens, nil
+}
+
+// DiscoverComponentTokensFromMonorepo downloads a single monorepo and extracts
+// component tokens from each workspace path. If paths is empty the entire repo is scanned.
+func (ghClient *GHClient) DiscoverComponentTokensFromMonorepo(
+	owner, repoName string,
+	paths []string,
+	extractDir, authToken string,
+) ([]string, error) {
+	fmt.Printf("Discovering components from monorepo %s/%s\n", owner, repoName)
+
+	repo, _, err := ghClient.Client.Repositories.Get(ghClient.Ctx, owner, repoName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get repo %s: %w", repoName, err)
+	}
+
+	ghRepo := api_results.GHRepo{
+		Name:          *repo.Name,
+		APIUrl:        *repo.URL,
+		DefaultBranch: *repo.DefaultBranch,
+	}
+
+	archiveFile, err := ghRepo.GetRepoArchive(authToken, api_results.Tarball, extractDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get archive for %s: %w", repoName, err)
+	}
+
+	dir, err := utils.ExtractGZIP(archiveFile, extractDir)
+	utils.RemoveFile(archiveFile)
+	if err != nil {
+		return nil, err
+	}
+	defer utils.RemoveDir(dir)
+
+	scanDirs := []string{dir}
+	if len(paths) > 0 {
+		scanDirs = make([]string, len(paths))
+		for i, p := range paths {
+			scanDirs[i] = filepath.Join(dir, p)
+		}
+	}
+
+	var allFiles []string
+	for _, d := range scanDirs {
+		files, err := utils.GetFilesByExtension(d, []string{".ts", ".tsx", ".jsx", ".vue"})
+		if err != nil {
+			return nil, err
+		}
+		allFiles = append(allFiles, files...)
+	}
+
+	return search.ExtractComponentTokens(allFiles)
 }
 
 func (ghClient *GHClient) discoverFromRepo(owner, repoName, extractDir, authToken string) ([]string, error) {

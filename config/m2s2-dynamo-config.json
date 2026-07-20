@@ -37,11 +37,8 @@
   "reposToIgnore": [],
   "componentDiscovery": {
     "owner": "M2S2-Engineering-Group",
-    "repos": [
-      "m2s2-ng-lib",
-      "m2s2-react-lib",
-      "m2s2-vue-lib"
-    ]
+    "repo": "m2s2-design-system",
+    "paths": ["packages/ng-lib", "packages/react-lib", "packages/vue-lib"]
   },
   "resultsWriterConfig": {
     "destination": "m2s2-scanner-results",

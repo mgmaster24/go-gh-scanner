@@ -39,7 +39,9 @@ type language struct {
 
 type discoveryConfig struct {
 	Owner string   `json:"owner"`
-	Repos []string `json:"repos"`
+	Repo  string   `json:"repo,omitempty"`
+	Repos []string `json:"repos,omitempty"`
+	Paths []string `json:"paths,omitempty"`
 }
 
 type writerConfig struct {
@@ -62,11 +64,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	var scanOwner, discoveryOwner, githubRepo, awsRegion string
-	var discoveryRepos, dependencies []string
+	var scanOwner, discoveryOwner, discoveryRepo, githubRepo, awsRegion string
+	var discoveryRepos, discoveryPaths, dependencies []string
 	json.Unmarshal(ctx["scanOwner"], &scanOwner)
 	json.Unmarshal(ctx["discoveryOwner"], &discoveryOwner)
+	json.Unmarshal(ctx["discoveryRepo"], &discoveryRepo)
 	json.Unmarshal(ctx["discoveryRepos"], &discoveryRepos)
+	json.Unmarshal(ctx["discoveryPaths"], &discoveryPaths)
 	json.Unmarshal(ctx["dependencies"], &dependencies)
 	json.Unmarshal(ctx["githubRepo"], &githubRepo)
 	json.Unmarshal(ctx["awsRegion"], &awsRegion)
@@ -90,7 +94,9 @@ func main() {
 		ReposToIgnore: []string{},
 		ComponentDiscovery: discoveryConfig{
 			Owner: discoveryOwner,
+			Repo:  discoveryRepo,
 			Repos: discoveryRepos,
+			Paths: discoveryPaths,
 		},
 		Results: writerConfig{
 			Destination:     stack.TableName,

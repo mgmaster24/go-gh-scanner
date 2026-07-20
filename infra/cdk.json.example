@@ -6,8 +6,10 @@
     "awsRegion": "us-east-1",
     "scanOwner": "",
     "discoveryOwner": "your-design-system-org",
+    "discoveryRepo": "your-design-system-repo",
+    "discoveryPaths": ["packages/ng-lib", "packages/react-lib"],
+    "discoveryRepos": [],
     "dependencies": ["@your-org/your-lib"],
-    "discoveryRepos": ["your-ng-lib", "your-react-lib"],
     "jwksUri": "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_XXXXXXXX/.well-known/jwks.json",
     "jwtIssuer": "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_XXXXXXXX",
     "jwtAudience": "your-cognito-app-client-id"
