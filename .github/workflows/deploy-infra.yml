@@ -6,7 +6,6 @@ on:
 permissions:
   id-token: write   # OIDC AWS auth
   contents: read
-  secrets: write    # gh secret set for AWS_ROLE_ARN and AWS_REGION
 
 jobs:
   deploy:
