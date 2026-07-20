@@ -1,0 +1,51 @@
+{
+  "extractDir": "temp",
+  "perPage": 100,
+  "packageFile": "package.json",
+  "owner": "m2s2",
+  "dependencies": [
+    "@m2s2/ng-lib",
+    "@m2s2/react-lib",
+    "@m2s2/vue-lib"
+  ],
+  "languages": [
+    {
+      "name": "TypeScript",
+      "extension": ".ts"
+    },
+    {
+      "name": "TypeScript React",
+      "extension": ".tsx"
+    },
+    {
+      "name": "JavaScript",
+      "extension": ".js"
+    },
+    {
+      "name": "JavaScript React",
+      "extension": ".jsx"
+    },
+    {
+      "name": "HTML",
+      "extension": ".html"
+    },
+    {
+      "name": "Vue",
+      "extension": ".vue"
+    }
+  ],
+  "reposToIgnore": [],
+  "componentDiscovery": {
+    "owner": "M2S2-Engineering-Group",
+    "repos": [
+      "m2s2-ng-lib",
+      "m2s2-react-lib",
+      "m2s2-vue-lib"
+    ]
+  },
+  "resultsWriterConfig": {
+    "destination": "m2s2-scanner-results",
+    "destinationType": "table",
+    "useBatch": true
+  }
+}

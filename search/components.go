@@ -9,11 +9,11 @@ import (
 )
 
 var (
-	// Angular: selector: 'm2s2-button'  (element selectors only)
+	// Angular: selector: 'my-button'  (element selectors only)
 	angularSelectorRe = regexp.MustCompile(`selector:\s*['"\x60]([^'"\x60\[\]\s]+)['"\x60]`)
-	// React/TS: export const|function|class M2s2Button
+	// React/TS: export const|function|class MyButton
 	exportedComponentRe = regexp.MustCompile(`export\s+(?:const|function|class)\s+([A-Z][A-Za-z0-9]+)`)
-	// Vue SFC: name: 'M2s2Button'
+	// Vue SFC: name: 'MyButton'
 	vueNameRe = regexp.MustCompile(`\bname:\s*['"]([^'"]+)['"]`)
 )
 

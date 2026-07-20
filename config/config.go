@@ -14,7 +14,7 @@ type AppConfig struct {
 	CurrentDep string
 }
 
-// ComponentDiscoveryConfig points at the m2s2 source repos to scan for component definitions.
+// ComponentDiscoveryConfig points at the design system source repos to scan for component definitions.
 type ComponentDiscoveryConfig struct {
 	Owner string   `json:"owner"`
 	Repos []string `json:"repos"`

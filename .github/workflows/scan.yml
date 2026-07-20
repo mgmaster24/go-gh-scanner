@@ -1,4 +1,4 @@
-name: m2s2 adoption scan
+name: Design system adoption scan
 
 on:
   schedule:
@@ -33,4 +33,4 @@ jobs:
       - name: Run scanner
         env:
           GITHUB_TOKEN: ${{ secrets.SCANNER_GITHUB_TOKEN }}
-        run: ./go-gh-scanner -c config/m2s2-dynamo-config.json
+        run: ./go-gh-scanner -c config/dynamo-config.json

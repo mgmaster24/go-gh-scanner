@@ -48,6 +48,7 @@ jobs:
               "scanOwner": "${{ vars.SCAN_OWNER }}",
               "discoveryOwner": "${{ vars.DISCOVERY_OWNER }}",
               "discoveryRepos": ${{ vars.DISCOVERY_REPOS }},
+              "dependencies": ${{ vars.DEPENDENCIES }},
               "jwksUri": "${{ secrets.JWKS_URI }}",
               "jwtIssuer": "${{ secrets.JWT_ISSUER }}",
               "jwtAudience": "${{ secrets.JWT_AUDIENCE }}"

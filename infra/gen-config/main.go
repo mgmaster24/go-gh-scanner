@@ -63,25 +63,22 @@ func main() {
 	}
 
 	var scanOwner, discoveryOwner, githubRepo, awsRegion string
-	var discoveryRepos []string
+	var discoveryRepos, dependencies []string
 	json.Unmarshal(ctx["scanOwner"], &scanOwner)
 	json.Unmarshal(ctx["discoveryOwner"], &discoveryOwner)
 	json.Unmarshal(ctx["discoveryRepos"], &discoveryRepos)
+	json.Unmarshal(ctx["dependencies"], &dependencies)
 	json.Unmarshal(ctx["githubRepo"], &githubRepo)
 	json.Unmarshal(ctx["awsRegion"], &awsRegion)
 
 	stack := outputs.ScannerInfraStack
 
 	cfg := appConfig{
-		ExtractDir:  "temp",
-		PerPage:     100,
-		PackageFile: "package.json",
-		Owner:       scanOwner,
-		Dependencies: []string{
-			"@m2s2/ng-lib",
-			"@m2s2/react-lib",
-			"@m2s2/vue-lib",
-		},
+		ExtractDir:   "temp",
+		PerPage:      100,
+		PackageFile:  "package.json",
+		Owner:        scanOwner,
+		Dependencies: dependencies,
 		Languages: []language{
 			{Name: "TypeScript", Extension: ".ts"},
 			{Name: "TypeScript React", Extension: ".tsx"},
@@ -108,12 +105,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	outPath := "../config/m2s2-dynamo-config.json"
+	outPath := "../config/dynamo-config.json"
 	if err := os.WriteFile(outPath, data, 0644); err != nil {
 		fmt.Fprintln(os.Stderr, "error writing config:", err)
 		os.Exit(1)
 	}
-	fmt.Println("config/m2s2-dynamo-config.json written")
+	fmt.Println("config/dynamo-config.json written")
 
 	if stack.ApiUrl != "" {
 		fmt.Printf("API endpoint: %s\n", stack.ApiUrl)
